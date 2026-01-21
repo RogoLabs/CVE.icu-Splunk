@@ -3,4 +3,4 @@
 []
 export = system
 owner = admin
-access = read : [ * ], write : [ admin, power ]
+access = read : [ * ], write : [ admin, sc_admin, power ]
