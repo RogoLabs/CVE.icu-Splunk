@@ -3,7 +3,10 @@ check_events.py
 seed_checkpoint.py
 props.conf
 collections.conf
+
+# Build artifacts
 *.tar.gz
+*.spl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
