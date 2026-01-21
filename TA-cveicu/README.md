@@ -1,6 +1,12 @@
-# TA-cveicu
+# TA-cveicu - CVE Intelligence for Splunk
 
-Splunk Technology Add-on for CVE List V5 data ingestion from the CVEProject/cvelistV5 GitHub repository.
+<p align="center">
+  <img src="https://cve.icu/static/images/logo.png" alt="cve.icu Logo" width="120"/>
+</p>
+
+Splunk Technology Add-on for ingesting the complete CVE database from the official CVE Program repository.
+
+Powered by [cve.icu](https://cve.icu) - Fast, searchable CVE lookup service.
 
 ## Overview
 
