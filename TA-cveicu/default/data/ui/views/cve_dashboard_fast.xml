@@ -1,0 +1,210 @@
+<dashboard version="1.1" theme="dark">
+    <label>CVE Dashboard</label>
+    <description>Real-time vulnerability intelligence from the CVE Program</description>
+    <fieldset submitButton="true" autoRun="true">
+        <input type="time" token="time_range" searchWhenChanged="true">
+            <label>Time Range</label>
+            <default>
+                <earliest>-7d@d</earliest>
+                <latest>now</latest>
+            </default>
+        </input>
+        <input type="dropdown" token="severity_filter" searchWhenChanged="true">
+            <label>Severity</label>
+            <choice value="*">All</choice>
+            <choice value="CRITICAL">Critical</choice>
+            <choice value="HIGH">High</choice>
+            <choice value="MEDIUM">Medium</choice>
+            <choice value="LOW">Low</choice>
+            <default>*</default>
+        </input>
+    </fieldset>
+    
+    <!-- SINGLE OPTIMIZED BASE SEARCH - extract minimally, filter early -->
+    <search id="base_cve_data">
+        <query>index=main sourcetype="cveicu:record"
+| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;[A-Z]+)\""
+| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})"
+| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;CRITICAL|HIGH|MEDIUM|LOW)\""
+| where cve_state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| eval severity=if(isnull(severity), "NONE", severity)
+| fields cve_id, date_published, pub_epoch, severity, _raw</query>
+        <earliest>0</earliest>
+        <latest>now</latest>
+    </search>
+    
+    <row>
+        <panel>
+            <single>
+                <title>Total CVEs Ingested</title>
+                <search>
+                    <query>index=main sourcetype="cveicu:record" 
+| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| where cve_state="PUBLISHED"
+| stats dc(cve_id) as total</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0x006d9c"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>New CVEs (Selected Period)</title>
+                <search base="base_cve_data">
+                    <query>| stats dc(cve_id) as new_cves</query>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+                <option name="rangeValues">[50,200]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>Critical Severity</title>
+                <search base="base_cve_data">
+                    <query>| search severity="CRITICAL" | stats dc(cve_id) as critical</query>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+                <option name="rangeValues">[5,20]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>High Severity</title>
+                <search base="base_cve_data">
+                    <query>| search severity="HIGH" | stats dc(cve_id) as high</query>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xf1813f"]</option>
+                <option name="rangeValues">[10,50]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <chart>
+                <title>CVE Publication Timeline</title>
+                <search base="base_cve_data">
+                    <query>| eval _time=pub_epoch | timechart span=1d count by severity</query>
+                </search>
+                <option name="charting.chart">column</option>
+                <option name="charting.chart.stackMode">stacked</option>
+                <option name="charting.legend.placement">bottom</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Severity Distribution</title>
+                <search base="base_cve_data">
+                    <query>| stats count by severity | sort - count</query>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
+            </chart>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <chart>
+                <title>Top 10 Affected Vendors</title>
+                <search base="base_cve_data">
+                    <query>| rex field=_raw max_match=10 "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
+| mvexpand vendor
+| where isnotnull(vendor) AND vendor!="n/a" AND vendor!=""
+| stats count by vendor
+| sort - count
+| head 10</query>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Top 10 Weakness Types (CWE)</title>
+                <search base="base_cve_data">
+                    <query>| rex field=_raw max_match=10 "\"cweId\"\s*:\s*\"(?&lt;cwe&gt;CWE-\d+)\""
+| mvexpand cwe
+| where isnotnull(cwe)
+| stats count by cwe
+| sort - count
+| head 10</query>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+            </chart>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <title>Recent High/Critical CVEs</title>
+            <table>
+                <search base="base_cve_data">
+                    <query>| search severity IN ("CRITICAL", "HIGH")
+| rex field=_raw "\"title\"\s*:\s*\"(?&lt;title&gt;[^\"]+)\""
+| rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
+| rex field=_raw "\"product\"\s*:\s*\"(?&lt;product&gt;[^\"]+)\""
+| rex field=_raw "\"baseScore\"\s*:\s*(?&lt;cvss_score&gt;[\d.]+)"
+| sort - pub_epoch
+| head 20
+| table cve_id, date_published, severity, cvss_score, vendor, product, title</query>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <title>CVE Lookup</title>
+            <input type="text" token="cve_search" searchWhenChanged="false">
+                <label>CVE ID</label>
+                <default>CVE-2026-</default>
+            </input>
+            <table>
+                <search>
+                    <query>index=main sourcetype="cveicu:record"
+| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;$cve_search$[^\"]*)\""
+| where isnotnull(cve_id)
+| head 50
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;[A-Z]+)\""
+| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;[^\"]+)\""
+| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;[A-Z]+)\""
+| rex field=_raw "\"baseScore\"\s*:\s*(?&lt;cvss_score&gt;[\d.]+)"
+| rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
+| rex field=_raw "\"title\"\s*:\s*\"(?&lt;title&gt;[^\"]+)\""
+| table cve_id, cve_state, date_published, severity, cvss_score, vendor, title</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+</dashboard>

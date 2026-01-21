@@ -1,0 +1,144 @@
+{
+    "modelName": "CVE_Intelligence",
+    "displayName": "CVE Intelligence",
+    "description": "Data model for CVE vulnerability intelligence with acceleration",
+    "objectSummary": {
+        "Event-Based": 1,
+        "Transaction-Based": 0,
+        "Search-Based": 0
+    },
+    "objects": [
+        {
+            "objectName": "CVE_Records",
+            "displayName": "CVE Records",
+            "parentName": "BaseEvent",
+            "comment": "All published CVE records",
+            "fields": [
+                {
+                    "fieldName": "cve_id",
+                    "displayName": "CVE ID",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "fieldName": "cve_state",
+                    "displayName": "CVE State",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "fieldName": "date_published",
+                    "displayName": "Date Published",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "fieldName": "cvss_severity",
+                    "displayName": "CVSS Severity",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "fieldName": "vendor",
+                    "displayName": "Vendor",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": true,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "fieldName": "cwe_id",
+                    "displayName": "CWE ID",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": true,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "fieldName": "assigner",
+                    "displayName": "Assigner",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": ""
+                }
+            ],
+            "calculations": [
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "severity",
+                            "displayName": "Severity",
+                            "type": "string",
+                            "fieldSearch": "",
+                            "required": false,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "comment": ""
+                        }
+                    ],
+                    "calculationType": "Eval",
+                    "expression": "coalesce(cvss_severity, \"NONE\")",
+                    "editable": true,
+                    "comment": ""
+                },
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "pub_epoch",
+                            "displayName": "Publication Epoch",
+                            "type": "number",
+                            "fieldSearch": "",
+                            "required": false,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "comment": ""
+                        }
+                    ],
+                    "calculationType": "Eval",
+                    "expression": "strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")",
+                    "editable": true,
+                    "comment": ""
+                }
+            ],
+            "constraints": [
+                {
+                    "search": "index=main sourcetype=\"cveicu:record\" cve_state=PUBLISHED",
+                    "owner": "CVE_Records"
+                }
+            ],
+            "lineage": "CVE_Records"
+        }
+    ]
+}

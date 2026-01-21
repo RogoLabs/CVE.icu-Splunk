@@ -1,10 +1,10 @@
-# cve.icu - Splunk Add-on for CVE List V5
+# TA-cveicu - Splunk Add-on for cve.icu
 
 <p align="center">
   <img src="https://cve.icu/static/images/logo.png" alt="cve.icu Logo" width="120"/>
 </p>
 
-A Splunk Technology Add-on (TA) that ingests the complete CVE (Common Vulnerabilities and Exposures) database from the official [CVE List V5 GitHub repository](https://github.com/CVEProject/cvelistV5). This add-on provides real-time vulnerability intelligence directly in your Splunk environment.
+A Splunk Technology Add-on (TA) that ingests the complete CVE (Common Vulnerabilities and Exposures) database from the official [CVE List V5 GitHub repository](https://github.com/CVEProject/cvelistV5). This add-on provides real-time vulnerability intelligence directly in your Splunk environment, powered by [cve.icu](https://cve.icu).
 
 ## Features
 
@@ -35,7 +35,7 @@ A Splunk Technology Add-on (TA) that ingests the complete CVE (Common Vulnerabil
 ## Installation
 
 1. Download or clone this repository
-2. Copy the `TA-cvelist-v5` folder to `$SPLUNK_HOME/etc/apps/`
+2. Copy the `TA-cveicu` folder to `$SPLUNK_HOME/etc/apps/`
 3. Restart Splunk: `$SPLUNK_HOME/bin/splunk restart`
 4. Configure the modular input (see Configuration section)
 
@@ -44,13 +44,13 @@ A Splunk Technology Add-on (TA) that ingests the complete CVE (Common Vulnerabil
 ### Setting Up the Modular Input
 
 1. Navigate to **Settings > Data Inputs**
-2. Click on **CVE List V5**
+2. Click on **cve.icu**
 3. Click **New** to create a new input
 4. Configure the following:
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| Name | Unique input name | `cvelist` |
+| Name | Unique input name | `cveicu` |
 | Interval | Polling interval in seconds | `3600` (1 hour) |
 | Index | Target Splunk index | `main` |
 | GitHub Token | Optional Personal Access Token | (empty) |
@@ -92,7 +92,7 @@ Interactive table with:
 ## Data Model
 
 ### Index: `main` (configurable)
-### Sourcetype: `cve:json:v5`
+### Sourcetype: `cveicu:record`
 
 ### Key Fields
 
@@ -115,14 +115,14 @@ Interactive table with:
 
 ### Find Critical CVEs from the Last 7 Days
 ```spl
-index=main sourcetype="cve:json:v5" cvss_severity=CRITICAL
+index=main sourcetype="cveicu:record" cvss_severity=CRITICAL
 | where date_published > relative_time(now(), "-7d")
 | table cve_id description cvss_score affected_vendors
 ```
 
 ### Top 10 Most Vulnerable Vendors
 ```spl
-index=main sourcetype="cve:json:v5"
+index=main sourcetype="cveicu:record"
 | mvexpand affected_vendors
 | stats count by affected_vendors
 | sort - count
@@ -131,14 +131,14 @@ index=main sourcetype="cve:json:v5"
 
 ### CVEs Affecting a Specific Product
 ```spl
-index=main sourcetype="cve:json:v5" affected_products="*apache*"
+index=main sourcetype="cveicu:record" affected_products="*apache*"
 | table cve_id cvss_score cvss_severity description date_published
 | sort - cvss_score
 ```
 
 ### Severity Distribution
 ```spl
-index=main sourcetype="cve:json:v5"
+index=main sourcetype="cveicu:record"
 | stats count by cvss_severity
 | sort - count
 ```
@@ -146,16 +146,17 @@ index=main sourcetype="cve:json:v5"
 ## Architecture
 
 ```
-TA-cvelist-v5/
+TA-cveicu/
 ├── default/
 │   ├── app.conf              # App configuration
 │   ├── inputs.conf           # Default input settings
 │   └── data/ui/views/        # Dashboard XML
 ├── bin/
-│   ├── cvelist_v5.py         # Main modular input
-│   ├── cve_processor.py      # CVE data extraction
-│   ├── github_client.py      # GitHub API client
-│   └── checkpoint_manager.py # State management
+│   ├── cveicu.py             # Main modular input
+│   ├── cveicu_lib/
+│   │   ├── cve_processor.py  # CVE data extraction
+│   │   ├── github_client.py  # GitHub API client
+│   │   └── checkpoint_manager.py # State management
 ├── static/
 │   └── appIcon*.png          # App icons
 └── lookups/
@@ -171,9 +172,9 @@ TA-cvelist-v5/
 ## Troubleshooting
 
 ### No Data Appearing
-1. Check the modular input is enabled: Settings > Data Inputs > CVE List V5
+1. Check the modular input is enabled: Settings > Data Inputs > cve.icu
 2. Verify network connectivity to api.github.com
-3. Check `index=_internal sourcetype=splunkd component=ExecProcessor cvelist` for errors
+3. Check `index=_internal sourcetype=splunkd component=ExecProcessor cveicu` for errors
 
 ### Rate Limiting
 - Add a GitHub Personal Access Token to increase limits from 60 to 5,000 requests/hour
@@ -181,7 +182,7 @@ TA-cvelist-v5/
 
 ### Slow Dashboard
 - Run the "Update KPI Lookup" saved search to refresh cached KPIs
-- Ensure the lookup file exists at `$SPLUNK_HOME/etc/apps/TA-cvelist-v5/lookups/cve_kpis.csv`
+- Ensure the lookup file exists at `$SPLUNK_HOME/etc/apps/TA-cveicu/lookups/cve_kpis.csv`
 
 ## Contributing
 

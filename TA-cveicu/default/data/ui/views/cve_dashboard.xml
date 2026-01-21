@@ -1,0 +1,320 @@
+<dashboard version="1.1" theme="dark">
+    <label>CVE Dashboard</label>
+    <description>Real-time vulnerability intelligence from the CVE Program</description>
+    
+    <!-- Time Range Picker -->
+    <fieldset submitButton="true" autoRun="true">
+        <input type="time" token="time_range" searchWhenChanged="true">
+            <label>Time Range</label>
+            <default>
+                <earliest>-7d@d</earliest>
+                <latest>now</latest>
+            </default>
+        </input>
+        <input type="dropdown" token="severity_filter" searchWhenChanged="true">
+            <label>Severity</label>
+            <choice value="*">All</choice>
+            <choice value="CRITICAL">Critical</choice>
+            <choice value="HIGH">High</choice>
+            <choice value="MEDIUM">Medium</choice>
+            <choice value="LOW">Low</choice>
+            <default>*</default>
+        </input>
+    </fieldset>
+    
+    <!-- Row 1: Key Metrics -->
+    <row>
+        <panel>
+            <single>
+                <title>Total CVEs Ingested</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" 
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.state output=state
+| where state="PUBLISHED"
+| stats dc(cve_id) as total</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0x006d9c"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>New CVEs (Selected Period)</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.state output=state
+| spath path=cveMetadata.datePublished output=date_published
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| stats dc(cve_id) as new_cves</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+                <option name="rangeValues">[50,200]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>Critical Severity</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
+| spath path=containers.cna.metrics{}.cvssV4_0.baseSeverity output=severity40
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| eval severity=coalesce(severity40, severity31)
+| search severity="CRITICAL"
+| stats dc(cve_id) as critical</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+                <option name="rangeValues">[5,20]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>High Severity</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
+| spath path=containers.cna.metrics{}.cvssV4_0.baseSeverity output=severity40
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| eval severity=coalesce(severity40, severity31)
+| search severity="HIGH"
+| stats dc(cve_id) as high</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xf1813f"]</option>
+                <option name="rangeValues">[10,50]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+    </row>
+    
+    <!-- Row 2: Timeline and Severity Distribution -->
+    <row>
+        <panel>
+            <chart>
+                <title>CVE Publication Timeline</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
+| spath path=containers.cna.metrics{}.cvssV4_0.baseSeverity output=severity40
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| eval severity=coalesce(severity40, severity31, "UNKNOWN")
+| eval _time=pub_epoch
+| timechart span=1d count by severity</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">column</option>
+                <option name="charting.chart.stackMode">stacked</option>
+                <option name="charting.legend.placement">bottom</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","UNKNOWN":"#708794"}</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Severity Distribution</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
+| spath path=containers.cna.metrics{}.cvssV4_0.baseSeverity output=severity40
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| eval severity=coalesce(severity40, severity31, "UNKNOWN")
+| stats count by severity
+| sort - count</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","UNKNOWN":"#708794"}</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <!-- Row 3: Top Vendors and CWE Types -->
+    <row>
+        <panel>
+            <chart>
+                <title>Top 10 Affected Vendors</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.affected{}.vendor output=vendor
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| mvexpand vendor
+| where isnotnull(vendor) AND vendor!="n/a"
+| stats count by vendor
+| sort - count
+| head 10</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Top 10 Weakness Types (CWE)</title>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.problemTypes{}.descriptions{}.cweId output=cwe
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| mvexpand cwe
+| where isnotnull(cwe)
+| stats count by cwe
+| sort - count
+| head 10</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <!-- Row 4: Recent Critical/High CVEs Table -->
+    <row>
+        <panel>
+            <title>Recent High/Critical CVEs</title>
+            <table>
+                <search>
+                    <query>index=* sourcetype="cveicu:record" earliest=0
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.title output=title
+| spath path=containers.cna.descriptions{0}.value output=description
+| spath path=containers.cna.affected{0}.vendor output=vendor
+| spath path=containers.cna.affected{0}.product output=product
+| spath path=containers.cna.metrics{}.cvssV3_1.baseScore output=cvss31_score
+| spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=cvss31_severity
+| spath path=containers.cna.metrics{}.cvssV4_0.baseScore output=cvss40_score
+| spath path=containers.cna.metrics{}.cvssV4_0.baseSeverity output=cvss40_severity
+| where state="PUBLISHED" AND isnotnull(date_published)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| eval range_start=relative_time(now(), "$time_range.earliest$")
+| eval range_end=if("$time_range.latest$"="now", now(), relative_time(now(), "$time_range.latest$"))
+| where pub_epoch &gt;= range_start AND pub_epoch &lt;= range_end
+| eval cvss_score=coalesce(cvss40_score, cvss31_score)
+| eval severity=coalesce(cvss40_severity, cvss31_severity)
+| search severity IN ("CRITICAL", "HIGH")
+| eval description=substr(description, 1, 200)."..."
+| sort - pub_epoch
+| head 20
+| table cve_id, date_published, severity, cvss_score, vendor, product, title</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <option name="refresh.display">progressbar</option>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+    
+    <!-- Row 5: Search for specific CVE -->
+    <row>
+        <panel>
+            <title>CVE Lookup</title>
+            <input type="text" token="cve_search" searchWhenChanged="false">
+                <label>CVE ID</label>
+                <default>CVE-2025-</default>
+            </input>
+            <table>
+                <search>
+                    <query>index=* sourcetype="cveicu:record"
+| spath path=cveMetadata.cveId output=cve_id
+| search cve_id="$cve_search$*"
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=cveMetadata.state output=state
+| spath path=containers.cna.title output=title
+| spath path=containers.cna.descriptions{0}.value output=description
+| spath path=containers.cna.affected{}.vendor output=vendors
+| spath path=containers.cna.affected{}.product output=products
+| spath path=containers.cna.metrics{}.cvssV3_1.baseScore output=cvss31_score
+| spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
+| spath path=containers.cna.metrics{}.cvssV4_0.baseScore output=cvss40_score
+| spath path=containers.cna.metrics{}.cvssV4_0.baseSeverity output=severity40
+| eval cvss_score=coalesce(cvss40_score, cvss31_score)
+| eval severity=coalesce(severity40, severity31)
+| eval description=substr(description, 1, 300)."..."
+| table cve_id, state, date_published, severity, cvss_score, vendors, products, title, description
+| head 50</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+</dashboard>
