@@ -2,3 +2,5 @@
 
 []
 export = system
+owner = admin
+access = read : [ * ], write : [ admin, power ]
