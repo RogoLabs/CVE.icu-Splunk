@@ -28,7 +28,7 @@
             <single>
                 <title>Total CVEs Ingested</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" 
+                    <query>index=* sourcetype="ta:cvelist:v5:record" 
 | spath path=cveMetadata.cveId output=cve_id
 | spath path=cveMetadata.state output=state
 | where state="PUBLISHED"
@@ -47,7 +47,7 @@
             <single>
                 <title>New CVEs (Selected Period)</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.cveId output=cve_id
 | spath path=cveMetadata.state output=state
 | spath path=cveMetadata.datePublished output=date_published
@@ -71,7 +71,7 @@
             <single>
                 <title>Critical Severity</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.cveId output=cve_id
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
@@ -99,7 +99,7 @@
             <single>
                 <title>High Severity</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.cveId output=cve_id
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
@@ -131,7 +131,7 @@
             <chart>
                 <title>CVE Publication Timeline</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
 | spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
@@ -157,7 +157,7 @@
             <chart>
                 <title>Severity Distribution</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
 | spath path=containers.cna.metrics{}.cvssV3_1.baseSeverity output=severity31
@@ -185,7 +185,7 @@
             <chart>
                 <title>Top 10 Affected Vendors</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
 | spath path=containers.cna.affected{}.vendor output=vendor
@@ -211,7 +211,7 @@
             <chart>
                 <title>Top 10 Weakness Types (CWE)</title>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
 | spath path=containers.cna.problemTypes{}.descriptions{}.cweId output=cwe
@@ -241,7 +241,7 @@
             <title>Recent High/Critical CVEs</title>
             <table>
                 <search>
-                    <query>index=* sourcetype="cveicu:record" earliest=0
+                    <query>index=* sourcetype="ta:cvelist:v5:record" earliest=0
 | spath path=cveMetadata.cveId output=cve_id
 | spath path=cveMetadata.datePublished output=date_published
 | spath path=cveMetadata.state output=state
@@ -288,7 +288,7 @@
             </input>
             <table>
                 <search>
-                    <query>index=* sourcetype="cveicu:record"
+                    <query>index=* sourcetype="ta:cvelist:v5:record"
 | spath path=cveMetadata.cveId output=cve_id
 | search cve_id="$cve_search$*"
 | spath path=cveMetadata.datePublished output=date_published

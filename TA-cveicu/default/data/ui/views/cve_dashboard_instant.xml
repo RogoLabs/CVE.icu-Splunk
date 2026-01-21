@@ -2,12 +2,15 @@
     <label>CVE Dashboard</label>
     <description>Live CVE intelligence powered by cve.icu | Updated hourly from the official CVE Program</description>
     <fieldset submitButton="true" autoRun="true">
-        <input type="time" token="time_range" searchWhenChanged="true">
+        <input type="dropdown" token="time_earliest" searchWhenChanged="true">
             <label>Time Range</label>
-            <default>
-                <earliest>-1y@d</earliest>
-                <latest>now</latest>
-            </default>
+            <choice value="-7d@d">Last 7 days</choice>
+            <choice value="-30d@d">Last 30 days</choice>
+            <choice value="-90d@d">Last 90 days</choice>
+            <choice value="-1y@d">Last 1 year</choice>
+            <choice value="-5y@d">Last 5 years</choice>
+            <choice value="0">All time</choice>
+            <default>-1y@d</default>
         </input>
         <input type="dropdown" token="severity_filter" searchWhenChanged="true">
             <label>Severity</label>
@@ -43,10 +46,10 @@
                 <search>
                     <query>| inputlookup cve_daily_summary.csv
 | eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| where date_epoch &gt;= relative_time(now(), "$time_earliest$")
 | stats sum(cve_count) as new_cves</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
@@ -61,10 +64,10 @@
                 <search>
                     <query>| inputlookup cve_daily_summary.csv
 | eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="CRITICAL"
+| where date_epoch &gt;= relative_time(now(), "$time_earliest$") AND severity="CRITICAL"
 | stats sum(cve_count) as critical</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
@@ -79,10 +82,10 @@
                 <search>
                     <query>| inputlookup cve_daily_summary.csv
 | eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="HIGH"
+| where date_epoch &gt;= relative_time(now(), "$time_earliest$") AND severity="HIGH"
 | stats sum(cve_count) as high</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
@@ -99,10 +102,10 @@
                 <search>
                     <query>| inputlookup cve_daily_summary.csv
 | eval _time=strptime(date_published, "%Y-%m-%d")
-| where _time &gt;= relative_time(now(), "$time_range.earliest$")
+| where _time &gt;= relative_time(now(), "$time_earliest$")
 | timechart span=1d sum(cve_count) by severity</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="charting.chart">column</option>
                 <option name="charting.chart.stackMode">stacked</option>
@@ -116,11 +119,11 @@
                 <search>
                     <query>| inputlookup cve_daily_summary.csv
 | eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| where date_epoch &gt;= relative_time(now(), "$time_earliest$")
 | stats sum(cve_count) as count by severity
 | sort - count</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="charting.chart">pie</option>
                 <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
@@ -132,15 +135,7 @@
             <chart>
                 <title>Top 10 Affected Vendors</title>
                 <search>
-                    <query>index=main sourcetype="cveicu:record"
-| spath path=cveMetadata.cveId output=cve_id
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.affected{0}.vendor output=vendor
-| where cve_state="PUBLISHED" AND isnotnull(date_published) AND isnotnull(vendor) AND vendor!="n/a" AND vendor!="Unknown"
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| stats dc(cve_id) as cve_count by vendor
+                    <query>| inputlookup cve_vendors.csv
 | sort - cve_count
 | head 10</query>
                     <earliest>0</earliest>
@@ -155,18 +150,18 @@
             <chart>
                 <title>Top 10 Weakness Types (CWE)</title>
                 <search>
-                    <query>index=main sourcetype="cveicu:record"
-| spath path=cveMetadata.cveId output=cve_id
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.problemTypes{0}.descriptions{0}.cweId output=cwe_id
-| where cve_state="PUBLISHED" AND isnotnull(date_published) AND isnotnull(cwe_id)
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| stats dc(cve_id) as count by cwe_id
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"cweId\"\s*:\s*\"(?&lt;cwe_id&gt;CWE-\d+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2}-\d{2})"
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where cve_state="PUBLISHED" AND isnotnull(cwe_id) AND date_epoch &gt;= relative_time(now(), "$time_earliest$")
+| stats count by cwe_id
 | sort - count
 | head 10
-| rename cwe_id as cwe</query>
+| lookup cwe_lookup.csv cwe_id OUTPUT cwe_name
+| eval label=cwe_id
+| table label count</query>
                     <earliest>0</earliest>
                     <latest>now</latest>
                 </search>
@@ -178,60 +173,31 @@
     </row>
     <row>
         <panel>
-            <title>Recent High/Critical CVEs</title>
             <table>
+                <title>Recent CVEs</title>
                 <search>
-                    <query>index=main sourcetype="cveicu:record"
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
-| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})"
-| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;CRITICAL|HIGH)\""
-| where cve_state="PUBLISHED" AND isnotnull(severity)
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| rex field=_raw "\"title\"\s*:\s*\"(?&lt;title&gt;[^\"]+)\""
+| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;[^\"]+)\""
+| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;[^\"]+)\""
+| rex field=_raw "\"baseScore\"\s*:\s*(?&lt;cvss_score&gt;[\d.]+)"
 | rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
 | rex field=_raw "\"product\"\s*:\s*\"(?&lt;product&gt;[^\"]+)\""
-| rex field=_raw "\"baseScore\"\s*:\s*(?&lt;cvss_score&gt;[\d.]+)"
-| sort - pub_epoch
+| rex field=_raw "\"value\"\s*:\s*\"(?&lt;description&gt;[^\"]{1,200})"
+| where cve_state="PUBLISHED"
+| eval date_published=substr(date_published,1,10)
+| eval severity=if(isnull(severity),"NONE",severity)
+| eval cvss_score=if(isnull(cvss_score),"-",cvss_score)
+| sort - date_published
+| dedup cve_id
 | head 20
-| table cve_id, date_published, severity, cvss_score, vendor, product, title</query>
-                    <earliest>0</earliest>
+| table date_published cve_id severity cvss_score vendor product description</query>
+                    <earliest>$time_earliest$</earliest>
                     <latest>now</latest>
                 </search>
+                <option name="drilldown">cell</option>
                 <option name="count">10</option>
-                <option name="drilldown">row</option>
-                <drilldown>
-                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
-                </drilldown>
-            </table>
-        </panel>
-    </row>
-    <row>
-        <panel>
-            <title>CVE Lookup</title>
-            <input type="text" token="cve_search" searchWhenChanged="false">
-                <label>CVE ID</label>
-                <default>CVE-2026-</default>
-            </input>
-            <table>
-                <search>
-                    <query>index=main sourcetype="cveicu:record"
-| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;$cve_search$[^\"]*)\""
-| where isnotnull(cve_id)
-| head 50
-| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;[A-Z]+)\""
-| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;[^\"]+)\""
-| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;[A-Z]+)\""
-| rex field=_raw "\"baseScore\"\s*:\s*(?&lt;cvss_score&gt;[\d.]+)"
-| rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
-| rex field=_raw "\"title\"\s*:\s*\"(?&lt;title&gt;[^\"]+)\""
-| table cve_id, cve_state, date_published, severity, cvss_score, vendor, title</query>
-                    <earliest>0</earliest>
-                    <latest>now</latest>
-                </search>
-                <option name="count">10</option>
-                <option name="drilldown">row</option>
                 <drilldown>
                     <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
                 </drilldown>

@@ -1,5 +1,5 @@
 <nav search_view="search" color="#C0392B">
-    <view name="cve_dashboard" default="true" label="CVE Dashboard" />
+    <view name="cve_dashboard_instant" default="true" label="CVE Dashboard" />
     <view name="setup_page_dashboard" label="Configuration" />
     <view name="search" label="Search" />
 </nav>

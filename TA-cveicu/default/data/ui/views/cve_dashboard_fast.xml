@@ -22,7 +22,7 @@
     
     <!-- SINGLE OPTIMIZED BASE SEARCH - extract minimally, filter early -->
     <search id="base_cve_data">
-        <query>index=main sourcetype="cveicu:record"
+        <query>index=main sourcetype="ta:cvelist:v5:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;[A-Z]+)\""
 | rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})"
@@ -41,7 +41,7 @@
             <single>
                 <title>Total CVEs Ingested</title>
                 <search>
-                    <query>index=main sourcetype="cveicu:record" 
+                    <query>index=main sourcetype="ta:cvelist:v5:record" 
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | where cve_state="PUBLISHED"
@@ -185,7 +185,7 @@
             </input>
             <table>
                 <search>
-                    <query>index=main sourcetype="cveicu:record"
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;$cve_search$[^\"]*)\""
 | where isnotnull(cve_id)
 | head 50

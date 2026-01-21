@@ -67,35 +67,40 @@ class TAcveicuSetupHandler(admin.MConfigHandler):
         Args:
             confInfo: Configuration info object
         """
-        github_token = self.callerArgs.data.get("github_token", [None])[0]
+        github_token = self.callerArgs.data.get("github_token", [""])[0] or ""
         
-        if github_token is None:
-            # Still mark as configured even if no token provided
-            self._mark_configured()
-            return
+        # Always ensure we have an entry in confInfo
+        confInfo["github_settings"]["github_token"] = ""
         
-        # Skip if masked value sent back
+        # Skip if masked value sent back (no change needed)
         if github_token == self.MASK:
+            confInfo["github_settings"]["github_token"] = self.MASK
             self._mark_configured()
             return
         
         try:
-            if github_token:
+            if github_token and github_token.strip():
                 # Store new token
-                self._store_credential(github_token)
+                self._store_credential(github_token.strip())
                 confInfo["github_settings"]["github_token"] = self.MASK
                 logging.info("GitHub token stored successfully")
             else:
-                # Delete existing token
-                self._delete_credential()
+                # No token provided - just mark as configured
+                # Try to delete any existing token (ignore errors)
+                try:
+                    self._delete_credential()
+                except Exception:
+                    pass
                 confInfo["github_settings"]["github_token"] = ""
-                logging.info("GitHub token deleted")
+                logging.info("No token provided, app configured without token")
             
             # Mark app as configured
             self._mark_configured()
             
         except Exception as e:
             logging.error(f"Error storing credential: {e}")
+            # Still mark as configured even if credential storage fails
+            self._mark_configured()
             raise admin.AdminManagerException(
                 admin.ADMIN_ERROR_INTERNAL,
                 f"Failed to store credential: {e}"

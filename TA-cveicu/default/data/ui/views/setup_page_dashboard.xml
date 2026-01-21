@@ -1,6 +1,6 @@
 <dashboard version="1.1" hideEdit="true" hideFilters="true">
     <label>CVE.ICU Setup</label>
-    <description>Configure CVE.ICU for GitHub CVE data ingestion</description>
+    <description>Configure CVE.ICU</description>
     
     <row>
         <panel>
@@ -10,227 +10,88 @@
                         max-width: 700px;
                         margin: 40px auto;
                         padding: 40px;
-                        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-                        border-radius: 16px;
-                        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-                    }
-                    
-                    .setup-header {
+                        background: #fff;
+                        border-radius: 12px;
+                        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
                         text-align: center;
-                        margin-bottom: 30px;
                     }
-                    
                     .setup-header h1 {
                         color: #d32f2f;
                         font-size: 32px;
                         margin-bottom: 10px;
                     }
-                    
                     .setup-header p {
                         color: #666;
                         font-size: 16px;
+                        margin-bottom: 30px;
                     }
-                    
-                    .form-group {
-                        margin-bottom: 25px;
+                    .info-section {
+                        background: #f5f5f5;
+                        padding: 20px;
+                        border-radius: 8px;
+                        margin: 20px 0;
+                        text-align: left;
                     }
-                    
-                    .form-group label {
-                        display: block;
-                        font-weight: 600;
-                        margin-bottom: 8px;
+                    .info-section h3 {
+                        margin: 0 0 10px 0;
                         color: #333;
                     }
-                    
-                    .form-group input[type="password"],
-                    .form-group input[type="text"] {
-                        width: 100%;
-                        padding: 12px 16px;
-                        font-size: 14px;
-                        border: 2px solid #e0e0e0;
-                        border-radius: 8px;
-                        box-sizing: border-box;
-                        transition: border-color 0.3s;
-                    }
-                    
-                    .form-group input:focus {
-                        border-color: #d32f2f;
-                        outline: none;
-                    }
-                    
-                    .form-group .hint {
-                        font-size: 12px;
-                        color: #888;
-                        margin-top: 6px;
-                    }
-                    
-                    .btn-setup {
-                        display: block;
-                        width: 100%;
-                        padding: 14px 20px;
-                        font-size: 16px;
-                        font-weight: 600;
-                        color: #fff;
-                        background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
-                        border: none;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        transition: transform 0.2s, box-shadow 0.2s;
-                    }
-                    
-                    .btn-setup:hover {
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 15px rgba(211, 47, 47, 0.4);
-                    }
-                    
-                    .btn-setup:disabled {
-                        background: #ccc;
-                        cursor: not-allowed;
-                        transform: none;
-                        box-shadow: none;
-                    }
-                    
-                    .status-message {
-                        margin-top: 20px;
-                        padding: 12px 16px;
-                        border-radius: 8px;
-                        text-align: center;
-                        display: none;
-                    }
-                    
-                    .status-message.success {
-                        background: #e8f5e9;
-                        color: #2e7d32;
-                        display: block;
-                    }
-                    
-                    .status-message.error {
-                        background: #ffebee;
-                        color: #c62828;
-                        display: block;
-                    }
-                    
-                    .optional-badge {
-                        font-size: 11px;
-                        font-weight: normal;
-                        color: #888;
-                        margin-left: 8px;
-                    }
-                    
-                    .info-box {
-                        background: #fff3e0;
-                        border-left: 4px solid #ff9800;
-                        padding: 15px;
-                        margin-bottom: 25px;
-                        border-radius: 0 8px 8px 0;
-                    }
-                    
-                    .info-box h4 {
-                        color: #e65100;
-                        margin: 0 0 8px 0;
-                    }
-                    
-                    .info-box p {
+                    .info-section p {
                         margin: 0;
                         color: #666;
                         font-size: 14px;
+                    }
+                    .info-section ul {
+                        margin: 10px 0 0 0;
+                        padding-left: 20px;
+                        color: #666;
+                    }
+                    .btn-complete {
+                        display: inline-block;
+                        padding: 15px 50px;
+                        font-size: 18px;
+                        font-weight: 600;
+                        color: #fff;
+                        background: #d32f2f;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        text-decoration: none;
+                        margin-top: 20px;
+                    }
+                    .btn-complete:hover {
+                        background: #b71c1c;
+                        color: #fff;
+                        text-decoration: none;
                     }
                 </style>
                 
                 <div class="setup-container">
                     <div class="setup-header">
-                        <h1>🚑 CVE.ICU Setup</h1>
-                        <p>Configure your GitHub access for CVE data ingestion</p>
+                        <h1>&#x1F691; CVE.ICU Setup</h1>
+                        <p>Your CVE vulnerability intelligence platform is ready!</p>
                     </div>
                     
-                    <div class="info-box">
-                        <h4>About GitHub Token</h4>
-                        <p>A GitHub Personal Access Token increases API rate limits from 60 to 5,000 requests per hour. This is optional but recommended for large CVE ingestion jobs.</p>
+                    <div class="info-section">
+                        <h3>What's Included</h3>
+                        <ul>
+                            <li>311,000+ CVE records from the official CVE Program</li>
+                            <li>Instant-loading dashboard with pre-calculated statistics</li>
+                            <li>CVSS scoring and severity analysis</li>
+                            <li>Vendor and product vulnerability tracking</li>
+                            <li>Hourly delta updates for new CVEs</li>
+                        </ul>
                     </div>
                     
-                    <form id="setup-form">
-                        <div class="form-group">
-                            <label for="github_token">
-                                GitHub Personal Access Token
-                                <span class="optional-badge">(Optional)</span>
-                            </label>
-                            <input type="password" id="github_token" name="github_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
-                            <div class="hint">Create a token at GitHub → Settings → Developer settings → Personal access tokens (no special scopes needed)</div>
-                        </div>
-                        
-                        <button type="submit" class="btn-setup" id="submit-btn">
-                            Complete Setup
-                        </button>
-                    </form>
+                    <div class="info-section">
+                        <h3>No Configuration Required</h3>
+                        <p>CVE.ICU works out of the box with no API keys or tokens needed. The hourly update process uses anonymous GitHub API access which is sufficient for delta updates.</p>
+                    </div>
                     
-                    <div id="status-message" class="status-message"></div>
+                    <a class="btn-complete" href="/app/TA-cveicu/cve_dashboard_instant?setup_complete=1">
+                        Launch Dashboard
+                    </a>
                 </div>
-                
-                <script>
-                    require([
-                        "splunkjs/mvc",
-                        "splunkjs/mvc/utils",
-                        "splunkjs/mvc/simplexml/ready!"
-                    ], function(mvc, utils) {
-                        
-                        var form = document.getElementById("setup-form");
-                        var statusDiv = document.getElementById("status-message");
-                        var submitBtn = document.getElementById("submit-btn");
-                        var tokenInput = document.getElementById("github_token");
-                        
-                        var service = mvc.createService();
-                        
-                        // Check if token already configured
-                        service.get(
-                            "/servicesNS/nobody/TA-cveicu/storage/passwords",
-                            { search: "realm=TA-cveicu" },
-                            function(err, response) {
-                                if (!err &amp;&amp; response.data &amp;&amp; response.data.entry) {
-                                    for (var i = 0; i &lt; response.data.entry.length; i++) {
-                                        if (response.data.entry[i].content.username === "github_token") {
-                                            tokenInput.placeholder = "Token configured (leave blank to keep)";
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        );
-                        
-                        form.addEventListener("submit", function(e) {
-                            e.preventDefault();
-                            
-                            submitBtn.disabled = true;
-                            submitBtn.textContent = "Saving...";
-                            statusDiv.className = "status-message";
-                            statusDiv.style.display = "none";
-                            
-                            var token = tokenInput.value.trim();
-                            
-                            // Use REST handler to save config and mark as configured
-                            service.post(
-                                "/servicesNS/nobody/TA-cveicu/ta_cveicu/ta_cveicu_settings/github_settings",
-                                { github_token: token },
-                                function(err, response) {
-                                    if (err) {
-                                        statusDiv.className = "status-message error";
-                                        statusDiv.textContent = "Error: " + (err.data &amp;&amp; err.data.messages ? err.data.messages[0].text : "Failed to save");
-                                        statusDiv.style.display = "block";
-                                        submitBtn.disabled = false;
-                                        submitBtn.textContent = "Complete Setup";
-                                    } else {
-                                        statusDiv.className = "status-message success";
-                                        statusDiv.textContent = "Setup complete! Redirecting to dashboard...";
-                                        statusDiv.style.display = "block";
-                                        
-                                        setTimeout(function() {
-                                            window.location.href = "/app/TA-cveicu/cveicu_dashboard";
-                                        }, 1500);
-                                    }
-                                }
-                            );
-                        });
-                    });
-                </script>
             </html>
         </panel>
     </row>
