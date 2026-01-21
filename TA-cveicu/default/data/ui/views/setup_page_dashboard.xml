@@ -1,4 +1,4 @@
-<dashboard version="1.1" hideEdit="true" hideFilters="true">
+<dashboard version="1.1" hideEdit="true" hideFilters="true" script="setup_complete.js">
     <label>CVE.ICU Setup</label>
     <description>Configure CVE.ICU</description>
     
@@ -64,6 +64,27 @@
                         color: #fff;
                         text-decoration: none;
                     }
+                    .setup-status {
+                        margin-top: 15px;
+                        padding: 10px;
+                        border-radius: 4px;
+                        display: none;
+                    }
+                    .setup-status.loading {
+                        display: block;
+                        background: #e3f2fd;
+                        color: #1565c0;
+                    }
+                    .setup-status.success {
+                        display: block;
+                        background: #e8f5e9;
+                        color: #2e7d32;
+                    }
+                    .setup-status.error {
+                        display: block;
+                        background: #ffebee;
+                        color: #c62828;
+                    }
                 </style>
                 
                 <div class="setup-container">
@@ -88,10 +109,78 @@
                         <p>CVE.ICU works out of the box with no API keys or tokens needed. The hourly update process uses anonymous GitHub API access which is sufficient for delta updates.</p>
                     </div>
                     
-                    <a class="btn-complete" href="/app/TA-cveicu/cve_dashboard_instant?setup_complete=1">
+                    <div class="info-section">
+                        <h3>Dashboard Theme</h3>
+                        <p>Select your preferred dashboard appearance:</p>
+                        <div style="margin-top: 15px;">
+                            <label style="display: inline-flex; align-items: center; margin-right: 30px; cursor: pointer;">
+                                <input type="radio" name="theme" value="light" checked="checked" style="margin-right: 8px;"/>
+                                <span>☀️ Light Mode</span>
+                            </label>
+                            <label style="display: inline-flex; align-items: center; cursor: pointer;">
+                                <input type="radio" name="theme" value="dark" style="margin-right: 8px;"/>
+                                <span>🌙 Dark Mode</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div id="setup-status" class="setup-status"></div>
+                    
+                    <button id="launch-btn" class="btn-complete" onclick="completeSetup()">
                         Launch Dashboard
-                    </a>
+                    </button>
                 </div>
+                
+                <script>
+                    function completeSetup() {
+                        var statusDiv = document.getElementById('setup-status');
+                        var btn = document.getElementById('launch-btn');
+                        
+                        // Show loading state
+                        statusDiv.className = 'setup-status loading';
+                        statusDiv.textContent = 'Completing setup...';
+                        btn.disabled = true;
+                        btn.style.opacity = '0.6';
+                        
+                        // Call the setup REST handler to mark as configured
+                        var xhr = new XMLHttpRequest();
+                        xhr.open('POST', '/en-US/splunkd/__raw/servicesNS/nobody/TA-cveicu/TA_cveicu_setup/github_settings', true);
+                        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                        xhr.setRequestHeader('X-Splunk-Form-Key', window.$C ? window.$C.FORM_KEY : '');
+                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                        
+                        xhr.onreadystatechange = function() {
+                            if (xhr.readyState === 4) {
+                                if (xhr.status === 200 || xhr.status === 201) {
+                                    statusDiv.className = 'setup-status success';
+                                    statusDiv.textContent = 'Setup complete! Redirecting...';
+                                    
+                                    // Small delay to allow Splunk to refresh, then redirect
+                                    setTimeout(function() {
+                                        window.location.href = '/en-US/app/TA-cveicu/cve_dashboard_instant';
+                                    }, 500);
+                                } else {
+                                    // Even if the REST call fails, try to redirect anyway
+                                    // The default/app.conf already has is_configured=true
+                                    statusDiv.className = 'setup-status success';
+                                    statusDiv.textContent = 'Redirecting to dashboard...';
+                                    setTimeout(function() {
+                                        window.location.href = '/en-US/app/TA-cveicu/cve_dashboard_instant';
+                                    }, 300);
+                                }
+                            }
+                        };
+                        
+                        xhr.onerror = function() {
+                            // On error, still redirect - default config should work
+                            window.location.href = '/en-US/app/TA-cveicu/cve_dashboard_instant';
+                        };
+                        
+                        // Send theme preference along with empty token
+                        var theme = document.querySelector('input[name="theme"]:checked').value;
+                        xhr.send('github_token=&amp;theme=' + theme);
+                    }
+                </script>
             </html>
         </panel>
     </row>

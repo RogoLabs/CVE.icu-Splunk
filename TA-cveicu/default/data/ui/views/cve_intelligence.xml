@@ -1,341 +1,164 @@
-<dashboard version="1.1" theme="dark">
-    <label>CVE Intelligence Dashboard</label>
-    <description>Real-time vulnerability intelligence from the CVE Program | Data refreshes hourly</description>
+<dashboard version="1.1" theme="light" script="cveicu_theme.js">
+    <label>Vulnerability Intelligence</label>
+    <description>Advanced CVE Analysis with EPSS, KEV, and SSVC Intelligence | Powered by cve.icu</description>
     
-    <fieldset submitButton="false" autoRun="true">
-        <input type="time" token="time_range" searchWhenChanged="true">
+    <fieldset submitButton="true" autoRun="true">
+        <input type="dropdown" token="time_earliest" searchWhenChanged="true">
             <label>Time Range</label>
-            <default>
-                <earliest>-1y@d</earliest>
-                <latest>now</latest>
-            </default>
-        </input>
-        <input type="dropdown" token="severity_filter" searchWhenChanged="true">
-            <label>Severity</label>
-            <choice value="*">All Severities</choice>
-            <choice value="CRITICAL">Critical</choice>
-            <choice value="HIGH">High</choice>
-            <choice value="MEDIUM">Medium</choice>
-            <choice value="LOW">Low</choice>
-            <default>*</default>
+            <choice value="-7d@d">Last 7 days</choice>
+            <choice value="-30d@d">Last 30 days</choice>
+            <choice value="-90d@d">Last 90 days</choice>
+            <choice value="-1y@d">Last 1 year</choice>
+            <choice value="0">All time</choice>
+            <default>-30d@d</default>
         </input>
         <input type="dropdown" token="vendor_filter" searchWhenChanged="true">
-            <label>Vendor</label>
+            <label>Vendor Filter</label>
             <choice value="*">All Vendors</choice>
-            <fieldForLabel>vendor</fieldForLabel>
-            <fieldForValue>vendor</fieldForValue>
-            <search>
-                <query>index=main sourcetype="ta:cvelist:v5:record" earliest=-30d
-| spath path=containers.cna.affected{0}.vendor output=vendor
-| where isnotnull(vendor) AND vendor!="n/a" AND vendor!="Unknown"
-| stats count by vendor
-| sort - count
-| head 20
-| fields vendor</query>
-            </search>
+            <choice value="microsoft">Microsoft</choice>
+            <choice value="linux">Linux</choice>
+            <choice value="cisco">Cisco</choice>
+            <choice value="apple">Apple</choice>
+            <choice value="google">Google</choice>
+            <choice value="oracle">Oracle</choice>
+            <choice value="adobe">Adobe</choice>
+            <default>*</default>
+        </input>
+        <input type="dropdown" token="kev_filter" searchWhenChanged="true">
+            <label>KEV Status</label>
+            <choice value="*">All CVEs</choice>
+            <choice value="true">In CISA KEV</choice>
             <default>*</default>
         </input>
     </fieldset>
     
+    <!-- Row 1: Key Metrics -->
     <row>
         <panel>
             <single>
-                <title>Total CVEs in Database</title>
+                <title>🚨 In CISA KEV</title>
                 <search>
-                    <query>| inputlookup cve_total.csv | table total_cves</query>
+                    <query>| inputlookup kev_lookup.csv
+| stats count as kev_count</query>
                     <earliest>0</earliest>
                     <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x006d9c","0x006d9c"]</option>
-                <option name="rangeValues">[0]</option>
-                <option name="useColors">1</option>
-                <option name="field">total_cves</option>
-                <option name="underLabel">PUBLISHED</option>
-            </single>
-        </panel>
-        <panel>
-            <single>
-                <title>CVEs in Period</title>
-                <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| stats sum(cve_count) as new_cves</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
-                </search>
-                <option name="colorMode">block</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
-                <option name="rangeColors">["0x53a051","0x53a051"]</option>
-                <option name="rangeValues">[0]</option>
-                <option name="useColors">1</option>
-                <option name="underLabel">NEW</option>
-            </single>
-        </panel>
-        <panel>
-            <single>
-                <title>Critical</title>
-                <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="CRITICAL"
-| stats sum(cve_count) as critical</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
-                </search>
-                <option name="colorMode">block</option>
-                <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
                 <option name="rangeColors">["0xdc4e41","0xdc4e41"]</option>
                 <option name="rangeValues">[0]</option>
                 <option name="useColors">1</option>
-                <option name="underLabel">CVSS 9.0-10.0</option>
             </single>
         </panel>
         <panel>
             <single>
-                <title>High</title>
+                <title>⚡ Active Exploitation (SSVC)</title>
                 <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="HIGH"
-| stats sum(cve_count) as high</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| where cve_state="PUBLISHED" AND ssvc_exploitation="active"
+| stats count as active_count</query>
+                    <earliest>$time_earliest$</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
                 <option name="rangeColors">["0xf1813f","0xf1813f"]</option>
                 <option name="rangeValues">[0]</option>
                 <option name="useColors">1</option>
-                <option name="underLabel">CVSS 7.0-8.9</option>
             </single>
         </panel>
         <panel>
             <single>
-                <title>Medium</title>
+                <title>🎯 High EPSS (&gt;50%)</title>
                 <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="MEDIUM"
-| stats sum(cve_count) as medium</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <query>| inputlookup epss_lookup.csv
+| where epss_score &gt; 0.5
+| stats count as high_epss</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
                 <option name="rangeColors">["0xf8be34","0xf8be34"]</option>
                 <option name="rangeValues">[0]</option>
                 <option name="useColors">1</option>
-                <option name="underLabel">CVSS 4.0-6.9</option>
             </single>
         </panel>
         <panel>
             <single>
-                <title>Low</title>
+                <title>🛡️ CISA Vulnrichment</title>
                 <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="LOW"
-| stats sum(cve_count) as low</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| where cve_state="PUBLISHED"
+| search _raw="*CISA*"
+| stats count as cisa_enriched</query>
+                    <earliest>$time_earliest$</earliest>
+                    <latest>now</latest>
                 </search>
                 <option name="colorMode">block</option>
                 <option name="drilldown">none</option>
-                <option name="numberPrecision">0</option>
                 <option name="rangeColors">["0x53a051","0x53a051"]</option>
                 <option name="rangeValues">[0]</option>
                 <option name="useColors">1</option>
-                <option name="underLabel">CVSS 0.1-3.9</option>
             </single>
         </panel>
     </row>
     
+    <!-- Row 2: Patching Priority Table -->
     <row>
         <panel>
-            <chart>
-                <title>CVE Publication Timeline by Severity</title>
-                <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval _time=strptime(date_published, "%Y-%m-%d")
-| where _time &gt;= relative_time(now(), "$time_range.earliest$")
-| timechart span=1d sum(cve_count) by severity</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
-                </search>
-                <option name="charting.chart">area</option>
-                <option name="charting.chart.stackMode">stacked</option>
-                <option name="charting.legend.placement">bottom</option>
-                <option name="charting.chart.nullValueMode">zero</option>
-                <option name="charting.axisTitleX.visibility">collapsed</option>
-                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
-                <option name="height">300</option>
-            </chart>
-        </panel>
-    </row>
-    
-    <row>
-        <panel>
-            <chart>
-                <title>Severity Distribution</title>
-                <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval date_epoch=strptime(date_published, "%Y-%m-%d")
-| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| stats sum(cve_count) as count by severity
-| sort - count</query>
-                    <earliest>$time_range.earliest$</earliest>
-                    <latest>$time_range.latest$</latest>
-                </search>
-                <option name="charting.chart">pie</option>
-                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
-                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
-                <option name="height">280</option>
-            </chart>
-        </panel>
-        <panel>
-            <chart>
-                <title>CVSS Score Distribution</title>
-                <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.metrics{0}.cvssV3_1.baseScore output=cvss_score
-| where cve_state="PUBLISHED" AND isnotnull(cvss_score)
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| eval score_bucket=case(
-    cvss_score&gt;=9.0, "9.0-10.0 Critical",
-    cvss_score&gt;=7.0, "7.0-8.9 High",
-    cvss_score&gt;=4.0, "4.0-6.9 Medium",
-    cvss_score&gt;=0.1, "0.1-3.9 Low",
-    true(), "None")
-| stats count by score_bucket
-| sort score_bucket</query>
-                    <earliest>0</earliest>
-                    <latest>now</latest>
-                </search>
-                <option name="charting.chart">pie</option>
-                <option name="charting.fieldColors">{"9.0-10.0 Critical":"#DC4E41","7.0-8.9 High":"#F1813F","4.0-6.9 Medium":"#F8BE34","0.1-3.9 Low":"#53A051","None":"#708794"}</option>
-                <option name="height">280</option>
-            </chart>
-        </panel>
-        <panel>
-            <chart>
-                <title>CVEs by Year Published</title>
-                <search>
-                    <query>| inputlookup cve_daily_summary.csv
-| eval year=substr(date_published, 1, 4)
-| stats sum(cve_count) as count by year
-| sort year</query>
-                    <earliest>0</earliest>
-                    <latest>now</latest>
-                </search>
-                <option name="charting.chart">column</option>
-                <option name="charting.legend.placement">none</option>
-                <option name="charting.chart.showDataLabels">minmax</option>
-                <option name="charting.axisTitleX.visibility">collapsed</option>
-                <option name="height">280</option>
-            </chart>
-        </panel>
-    </row>
-    
-    <row>
-        <panel>
-            <chart>
-                <title>Top 10 Affected Vendors</title>
-                <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
-| spath path=cveMetadata.cveId output=cve_id
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.affected{0}.vendor output=vendor
-| where cve_state="PUBLISHED" AND isnotnull(date_published) AND isnotnull(vendor) AND vendor!="n/a" AND vendor!="Unknown"
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| stats dc(cve_id) as cve_count by vendor
-| sort - cve_count
-| head 10</query>
-                    <earliest>0</earliest>
-                    <latest>now</latest>
-                </search>
-                <option name="charting.chart">bar</option>
-                <option name="charting.legend.placement">none</option>
-                <option name="charting.chart.showDataLabels">all</option>
-                <option name="charting.seriesColors">[0x006d9c]</option>
-                <option name="height">300</option>
-            </chart>
-        </panel>
-        <panel>
-            <chart>
-                <title>Top 10 Weakness Types (CWE)</title>
-                <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
-| spath path=cveMetadata.cveId output=cve_id
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.problemTypes{0}.descriptions{0}.cweId output=cwe_id
-| where cve_state="PUBLISHED" AND isnotnull(date_published) AND isnotnull(cwe_id)
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| stats dc(cve_id) as count by cwe_id
-| sort - count
-| head 10
-| rename cwe_id as "Weakness Type"</query>
-                    <earliest>0</earliest>
-                    <latest>now</latest>
-                </search>
-                <option name="charting.chart">bar</option>
-                <option name="charting.legend.placement">none</option>
-                <option name="charting.chart.showDataLabels">all</option>
-                <option name="charting.seriesColors">[0x5a4575]</option>
-                <option name="height">300</option>
-            </chart>
-        </panel>
-    </row>
-    
-    <row>
-        <panel>
-            <title>Recent Critical and High Severity CVEs</title>
+            <title>🔥 Patching Priority Queue (CVSS × EPSS × KEV)</title>
             <table>
                 <search>
                     <query>index=main sourcetype="ta:cvelist:v5:record"
-| spath path=cveMetadata.cveId output=cve_id
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.metrics{0}.cvssV3_1.baseSeverity output=severity
-| spath path=containers.cna.metrics{0}.cvssV3_1.baseScore output=cvss_score
-| spath path=containers.cna.affected{0}.vendor output=vendor
-| spath path=containers.cna.affected{0}.product output=product
-| spath path=containers.cna.title output=title
-| where cve_state="PUBLISHED" AND (severity="CRITICAL" OR severity="HIGH")
-| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
-| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
-| eval date_published=strftime(pub_epoch, "%Y-%m-%d %H:%M")
-| sort - pub_epoch
-| head 25
-| table cve_id, date_published, severity, cvss_score, vendor, product, title
-| rename cve_id as "CVE ID", date_published as "Published", severity as "Severity", cvss_score as "CVSS", vendor as "Vendor", product as "Product", title as "Title"</query>
-                    <earliest>0</earliest>
+| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;[^\"]+)\""
+| rex field=_raw "\"baseScore\"\s*:\s*(?&lt;cvss_score&gt;[\d.]+)"
+| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;[^\"]+)\""
+| rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
+| rex field=_raw "\"product\"\s*:\s*\"(?&lt;product&gt;[^\"]+)\""
+| rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
+| where cve_state="PUBLISHED" AND isnotnull(cvss_score)
+| lookup epss_lookup.csv cve_id OUTPUT epss_score epss_percentile
+| lookup kev_lookup.csv cve_id OUTPUT in_kev kev_due_date kev_required_action
+| eval cvss_score=tonumber(cvss_score)
+| eval epss_score=coalesce(tonumber(epss_score), 0.001)
+| eval kev_multiplier=if(in_kev="true", 2, 1)
+| eval ssvc_multiplier=case(ssvc_exploitation="active", 2, ssvc_exploitation="poc", 1.5, 1=1, 1)
+| eval risk_priority=round(cvss_score * (1 + epss_score * 10) * kev_multiplier * ssvc_multiplier, 2)
+| eval date_published=substr(date_published, 1, 10)
+| eval epss_pct=round(epss_score * 100, 1)."%"
+| eval urgency=case(
+    in_kev="true" AND ssvc_exploitation="active", "🚨 IMMEDIATE",
+    in_kev="true" OR ssvc_exploitation="active", "⚠️ URGENT",
+    risk_priority &gt;= 50, "🔴 HIGH",
+    risk_priority &gt;= 30, "🟠 MEDIUM",
+    1=1, "🟢 NORMAL"
+)
+| sort - risk_priority
+| dedup cve_id
+| head 50
+| table urgency cve_id date_published severity cvss_score epss_pct in_kev ssvc_exploitation risk_priority vendor product kev_due_date
+| rename urgency as "Urgency", cve_id as "CVE ID", date_published as "Published", severity as "Severity", cvss_score as "CVSS", epss_pct as "EPSS", in_kev as "In KEV", ssvc_exploitation as "SSVC Exploit", risk_priority as "Risk Score", vendor as "Vendor", product as "Product", kev_due_date as "KEV Due Date"</query>
+                    <earliest>$time_earliest$</earliest>
                     <latest>now</latest>
                 </search>
-                <option name="count">10</option>
+                <option name="drilldown">cell</option>
+                <option name="count">15</option>
                 <option name="dataOverlayMode">none</option>
-                <option name="drilldown">row</option>
-                <option name="wrap">true</option>
-                <format type="color" field="Severity">
-                    <colorPalette type="map">{"CRITICAL":#DC4E41,"HIGH":#F1813F}</colorPalette>
+                <option name="rowNumbers">true</option>
+                <option name="wrap">false</option>
+                <format type="color" field="Risk Score">
+                    <colorPalette type="minMidMax" maxColor="#DC4E41" midColor="#F8BE34" minColor="#53A051"></colorPalette>
+                    <scale type="minMidMax" midValue="30"></scale>
                 </format>
                 <format type="color" field="CVSS">
                     <colorPalette type="minMidMax" maxColor="#DC4E41" midColor="#F8BE34" minColor="#53A051"></colorPalette>
-                    <scale type="minMidMax" midValue="7"></scale>
+                    <scale type="minMidMax" midValue="5"></scale>
                 </format>
                 <drilldown>
                     <link target="_blank">https://www.cve.org/CVERecord?id=$row.CVE ID$</link>
@@ -344,54 +167,243 @@
         </panel>
     </row>
     
+    <!-- Row 3: SSVC Decision Flow -->
     <row>
         <panel>
-            <title>CVE Search</title>
-            <input type="text" token="cve_search" searchWhenChanged="false">
-                <label>Search CVE ID</label>
-                <default>CVE-2025-</default>
-            </input>
-            <table>
+            <title>📊 SSVC Decision Distribution</title>
+            <chart>
                 <search>
                     <query>index=main sourcetype="ta:cvelist:v5:record"
-| spath path=cveMetadata.cveId output=cve_id
-| search cve_id="$cve_search$*"
-| head 50
-| spath path=cveMetadata.state output=cve_state
-| spath path=cveMetadata.datePublished output=date_published
-| spath path=containers.cna.metrics{0}.cvssV3_1.baseSeverity output=severity
-| spath path=containers.cna.metrics{0}.cvssV3_1.baseScore output=cvss_score
-| spath path=containers.cna.affected{0}.vendor output=vendor
-| spath path=containers.cna.title output=title
-| eval date_published=strftime(strptime(date_published, "%Y-%m-%dT%H:%M:%S"), "%Y-%m-%d")
-| table cve_id, cve_state, date_published, severity, cvss_score, vendor, title
-| rename cve_id as "CVE ID", cve_state as "State", date_published as "Published", severity as "Severity", cvss_score as "CVSS", vendor as "Vendor", title as "Title"</query>
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
+| rex field=_raw "\"Automatable\"\s*:\s*\"(?&lt;ssvc_automatable&gt;[^\"]+)\""
+| rex field=_raw "\"Technical Impact\"\s*:\s*\"(?&lt;ssvc_technical_impact&gt;[^\"]+)\""
+| where cve_state="PUBLISHED" AND (isnotnull(ssvc_exploitation) OR isnotnull(ssvc_automatable) OR isnotnull(ssvc_technical_impact))
+| eval ssvc_exploitation=coalesce(ssvc_exploitation, "unknown")
+| eval ssvc_automatable=coalesce(ssvc_automatable, "unknown")
+| eval ssvc_technical_impact=coalesce(ssvc_technical_impact, "unknown")
+| stats count by ssvc_exploitation ssvc_automatable ssvc_technical_impact
+| sort - count</query>
+                    <earliest>$time_earliest$</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.chart.stackMode">stacked</option>
+                <option name="charting.legend.placement">right</option>
+                <option name="charting.drilldown">none</option>
+            </chart>
+        </panel>
+        <panel>
+            <title>🎯 SSVC Exploitation Status</title>
+            <chart>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
+| where cve_state="PUBLISHED" AND isnotnull(ssvc_exploitation)
+| stats count by ssvc_exploitation
+| sort - count</query>
+                    <earliest>$time_earliest$</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"active":"#DC4E41","poc":"#F8BE34","none":"#53A051"}</option>
+            </chart>
+        </panel>
+        <panel>
+            <title>🔧 SSVC Automatable</title>
+            <chart>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"Automatable\"\s*:\s*\"(?&lt;ssvc_automatable&gt;[^\"]+)\""
+| where cve_state="PUBLISHED" AND isnotnull(ssvc_automatable)
+| stats count by ssvc_automatable
+| sort - count</query>
+                    <earliest>$time_earliest$</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"yes":"#DC4E41","no":"#53A051"}</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <!-- Row 4: Vendor Comparison -->
+    <row>
+        <panel>
+            <title>🏢 Vendor Vulnerability Comparison (Monthly Trend)</title>
+            <chart>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2})"
+| rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
+| where cve_state="PUBLISHED"
+| eval vendor_normalized=case(
+    lower(vendor) LIKE "%microsoft%", "Microsoft",
+    lower(vendor) LIKE "%linux%", "Linux",
+    lower(vendor) LIKE "%cisco%", "Cisco",
+    lower(vendor) LIKE "%apple%", "Apple",
+    lower(vendor) LIKE "%google%", "Google",
+    lower(vendor) LIKE "%oracle%", "Oracle",
+    lower(vendor) LIKE "%adobe%", "Adobe",
+    1=1, "Other"
+)
+| where vendor_normalized!="Other"
+| timechart span=1mon count by vendor_normalized</query>
+                    <earliest>-1y@y</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">line</option>
+                <option name="charting.chart.nullValueMode">zero</option>
+                <option name="charting.legend.placement">right</option>
+                <option name="charting.axisTitleX.visibility">collapsed</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <!-- Row 5: Vendor Severity Breakdown -->
+    <row>
+        <panel>
+            <title>🔴 Critical/High CVEs by Vendor</title>
+            <chart>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
+| rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;[^\"]+)\""
+| rex field=_raw "\"vendor\"\s*:\s*\"(?&lt;vendor&gt;[^\"]+)\""
+| where cve_state="PUBLISHED" AND (severity="CRITICAL" OR severity="HIGH")
+| eval vendor_normalized=case(
+    lower(vendor) LIKE "%microsoft%", "Microsoft",
+    lower(vendor) LIKE "%linux%", "Linux",
+    lower(vendor) LIKE "%cisco%", "Cisco",
+    lower(vendor) LIKE "%apple%", "Apple",
+    lower(vendor) LIKE "%google%", "Google",
+    lower(vendor) LIKE "%oracle%", "Oracle",
+    lower(vendor) LIKE "%adobe%", "Adobe",
+    lower(vendor) LIKE "%vmware%", "VMware",
+    lower(vendor) LIKE "%fortinet%", "Fortinet",
+    lower(vendor) LIKE "%paloalto%", "Palo Alto",
+    1=1, "Other"
+)
+| where vendor_normalized!="Other"
+| stats count by vendor_normalized severity
+| xyseries vendor_normalized severity count</query>
+                    <earliest>$time_earliest$</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.chart.stackMode">stacked</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F"}</option>
+                <option name="charting.legend.placement">bottom</option>
+            </chart>
+        </panel>
+        <panel>
+            <title>📈 EPSS Score Distribution</title>
+            <chart>
+                <search>
+                    <query>| inputlookup epss_lookup.csv
+| eval epss_bucket=case(
+    epss_score &gt;= 0.9, "90-100%",
+    epss_score &gt;= 0.7, "70-89%",
+    epss_score &gt;= 0.5, "50-69%",
+    epss_score &gt;= 0.3, "30-49%",
+    epss_score &gt;= 0.1, "10-29%",
+    1=1, "0-9%"
+)
+| stats count by epss_bucket
+| sort - epss_bucket</query>
                     <earliest>0</earliest>
                     <latest>now</latest>
                 </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"90-100%":"#DC4E41","70-89%":"#F1813F","50-69%":"#F8BE34","30-49%":"#6DB7C6","10-29%":"#53A051","0-9%":"#708794"}</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <!-- Row 6: Health Monitoring -->
+    <row>
+        <panel>
+            <title>🏥 TA-cveicu Health Monitor</title>
+            <table>
+                <search>
+                    <query>index=_internal sourcetype=splunkd component=ModularInputs OR component=ExecProcessor
+| search (cveicu OR TA-cveicu OR ta_cveicu)
+| eval status=case(
+    searchmatch("ERROR"), "🔴 ERROR",
+    searchmatch("WARN"), "🟠 WARNING",
+    searchmatch("rate limit"), "⚠️ RATE LIMITED",
+    1=1, "🟢 OK"
+)
+| stats latest(_time) as last_seen count by status
+| eval last_seen=strftime(last_seen, "%Y-%m-%d %H:%M:%S")
+| sort - count</query>
+                    <earliest>-24h@h</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="drilldown">none</option>
                 <option name="count">10</option>
-                <option name="drilldown">row</option>
-                <format type="color" field="Severity">
-                    <colorPalette type="map">{"CRITICAL":#DC4E41,"HIGH":#F1813F,"MEDIUM":#F8BE34,"LOW":#53A051}</colorPalette>
-                </format>
-                <format type="color" field="State">
-                    <colorPalette type="map">{"PUBLISHED":#53A051,"REJECTED":#DC4E41}</colorPalette>
-                </format>
+            </table>
+        </panel>
+        <panel>
+            <title>📊 Ingestion Statistics (Last 24h)</title>
+            <table>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;[^\"]+)\""
+| stats count as total_events earliest(_time) as first_event latest(_time) as last_event by cve_state
+| eval first_event=strftime(first_event, "%Y-%m-%d %H:%M")
+| eval last_event=strftime(last_event, "%Y-%m-%d %H:%M")
+| rename cve_state as "State", total_events as "Events", first_event as "First Event", last_event as "Last Event"</query>
+                    <earliest>-24h@h</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="drilldown">none</option>
+            </table>
+        </panel>
+        <panel>
+            <title>⏱️ GitHub API Status</title>
+            <single>
+                <search>
+                    <query>index=_internal sourcetype=splunkd "rate limit" (cveicu OR github)
+| head 1
+| eval status=if(searchmatch("exceeded"), "⚠️ EXCEEDED", "✅ OK")
+| stats count
+| eval status=if(count&gt;0, "⚠️ Rate Limited", "✅ OK")
+| table status</query>
+                    <earliest>-1h@h</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="drilldown">none</option>
+            </single>
+        </panel>
+    </row>
+    
+    <!-- Row 7: CISA KEV Details -->
+    <row>
+        <panel>
+            <title>📋 CISA KEV Catalog - Known Exploited Vulnerabilities</title>
+            <table>
+                <search>
+                    <query>| inputlookup kev_lookup.csv
+| table cve_id kev_vendor kev_product kev_vulnerability_name kev_date_added kev_due_date kev_ransomware kev_required_action
+| sort - kev_date_added
+| head 25
+| rename cve_id as "CVE ID", kev_vendor as "Vendor", kev_product as "Product", kev_vulnerability_name as "Vulnerability", kev_date_added as "Date Added", kev_due_date as "Due Date", kev_ransomware as "Ransomware", kev_required_action as "Required Action"</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="drilldown">cell</option>
+                <option name="count">10</option>
+                <option name="wrap">true</option>
                 <drilldown>
                     <link target="_blank">https://www.cve.org/CVERecord?id=$row.CVE ID$</link>
                 </drilldown>
             </table>
-        </panel>
-    </row>
-    
-    <row>
-        <panel>
-            <html>
-                <div style="text-align: center; padding: 10px; color: #999; font-size: 12px;">
-                    Data Source: <a href="https://github.com/CVEProject/cvelistV5" target="_blank" style="color: #006d9c;">CVE Program GitHub Repository</a> |
-                    Dashboard refreshes automatically | Click any CVE ID to view details on CVE.org
-                </div>
-            </html>
         </panel>
     </row>
 </dashboard>

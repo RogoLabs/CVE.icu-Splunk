@@ -243,11 +243,31 @@ class CVEProcessor:
         return result
     
     def _extract_adp_data(self, adp_list: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Extract fields from ADP containers."""
+        """
+        Extract fields from ADP containers.
+        
+        Specifically extracts CISA Vulnrichment data including:
+        - SSVC Decision Points (Exploitation, Automatable, Technical Impact)
+        - KEV Status
+        - Recovery information
+        """
         result = {
             "adp_providers": [],
             "has_cisa_adp": False,
             "has_cve_program_container": False,
+            # SSVC Decision Points (Stakeholder-Specific Vulnerability Categorization)
+            "ssvc_exploitation": None,
+            "ssvc_automatable": None,
+            "ssvc_technical_impact": None,
+            "ssvc_decision": None,
+            # CISA KEV Integration
+            "cisa_kev": False,
+            "cisa_date_added": None,
+            "cisa_required_action": None,
+            "cisa_due_date": None,
+            # Recovery Information
+            "cisa_recovery": None,
+            "cisa_value_density": None,
         }
         
         for adp in adp_list:
@@ -257,15 +277,69 @@ class CVEProcessor:
             
             title = adp.get("title", "")
             
-            # Check for CISA-ADP
+            # Check for CISA-ADP (Vulnrichment)
             if "CISA" in provider or "CISA" in title:
                 result["has_cisa_adp"] = True
                 
-                # Extract CISA SSVC data if present
+                # Extract CISA SSVC data from metrics
                 for metric in adp.get("metrics", []):
                     other = metric.get("other", {})
+                    
+                    # SSVC Decision Points
                     if other.get("type") == "ssvc":
-                        result["cisa_ssvc"] = json.dumps(other.get("content", {}))
+                        ssvc_content = other.get("content", {})
+                        result["cisa_ssvc"] = json.dumps(ssvc_content)
+                        
+                        # Extract individual SSVC decision points
+                        options = ssvc_content.get("options", [])
+                        for option in options:
+                            option_type = option.get("type", "").lower()
+                            option_value = option.get("Exploitation") or option.get("exploitation")
+                            
+                            if option_type == "exploitation" or "Exploitation" in option:
+                                result["ssvc_exploitation"] = option.get("Exploitation", option.get("exploitation"))
+                            
+                            if option_type == "automatable" or "Automatable" in option:
+                                result["ssvc_automatable"] = option.get("Automatable", option.get("automatable"))
+                            
+                            if option_type == "technical impact" or "Technical Impact" in option:
+                                result["ssvc_technical_impact"] = option.get("Technical Impact", option.get("technical_impact"))
+                        
+                        # Check for SSVC decision directly at root
+                        if "Exploitation" in ssvc_content:
+                            result["ssvc_exploitation"] = ssvc_content.get("Exploitation")
+                        if "Automatable" in ssvc_content:
+                            result["ssvc_automatable"] = ssvc_content.get("Automatable")
+                        if "Technical Impact" in ssvc_content:
+                            result["ssvc_technical_impact"] = ssvc_content.get("Technical Impact")
+                        
+                        # Extract overall decision if present
+                        if "Decision" in ssvc_content:
+                            result["ssvc_decision"] = ssvc_content.get("Decision")
+                        elif "decision" in ssvc_content:
+                            result["ssvc_decision"] = ssvc_content.get("decision")
+                    
+                    # KEV (Known Exploited Vulnerabilities) indicator
+                    if other.get("type") == "kev":
+                        kev_content = other.get("content", {})
+                        result["cisa_kev"] = True
+                        result["cisa_date_added"] = kev_content.get("dateAdded")
+                        result["cisa_required_action"] = kev_content.get("requiredAction")
+                        result["cisa_due_date"] = kev_content.get("dueDate")
+                        result["cisa_reference"] = kev_content.get("reference")
+                
+                # Extract CISA tags for recovery, value density
+                tags = adp.get("tags", [])
+                for tag in tags:
+                    tag_lower = tag.lower() if isinstance(tag, str) else ""
+                    if "kev" in tag_lower:
+                        result["cisa_kev"] = True
+                    elif tag in ["Attended", "Unattended", "Marginal", "Concentrated"]:
+                        # Value Density
+                        result["cisa_value_density"] = tag
+                    elif tag in ["Automatic", "Supported", "Manual", "Not Defined"]:
+                        # Recovery
+                        result["cisa_recovery"] = tag
             
             # Check for CVE Program Container
             if "CVE Program" in title:

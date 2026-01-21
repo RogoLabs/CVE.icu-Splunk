@@ -1,0 +1,2 @@
+cve_id,cvss_score,epss_score,in_kev,ssvc_exploitation,risk_priority
+CVE-2024-0001,0,0.001,false,,0

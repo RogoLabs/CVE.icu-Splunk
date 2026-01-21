@@ -1,0 +1,2 @@
+cve_id,kev_vendor,kev_product,kev_vulnerability_name,kev_date_added,kev_due_date,kev_required_action,kev_ransomware,in_kev
+CVE-2024-0001,Example Vendor,Example Product,Example Vulnerability,2024-01-01,2024-01-15,Apply vendor patches,Unknown,true

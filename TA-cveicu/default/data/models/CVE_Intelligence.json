@@ -1,7 +1,7 @@
 {
     "modelName": "CVE_Intelligence",
     "displayName": "CVE Intelligence",
-    "description": "Data model for CVE vulnerability intelligence with acceleration",
+    "description": "Data model for CVE vulnerability intelligence with acceleration - includes CVSS, EPSS, KEV, and SSVC metrics",
     "objectSummary": {
         "Event-Based": 1,
         "Transaction-Based": 0,
@@ -12,7 +12,7 @@
             "objectName": "CVE_Records",
             "displayName": "CVE Records",
             "parentName": "BaseEvent",
-            "comment": "All published CVE records",
+            "comment": "All published CVE records with vulnerability intelligence",
             "fields": [
                 {
                     "fieldName": "cve_id",
@@ -23,7 +23,7 @@
                     "multivalue": false,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "Unique CVE identifier (e.g., CVE-2024-12345)"
                 },
                 {
                     "fieldName": "cve_state",
@@ -34,7 +34,7 @@
                     "multivalue": false,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "PUBLISHED, REJECTED, or RESERVED"
                 },
                 {
                     "fieldName": "date_published",
@@ -45,7 +45,7 @@
                     "multivalue": false,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "ISO 8601 publication date"
                 },
                 {
                     "fieldName": "cvss_severity",
@@ -56,7 +56,18 @@
                     "multivalue": false,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "CRITICAL, HIGH, MEDIUM, LOW, or NONE"
+                },
+                {
+                    "fieldName": "cvss_score",
+                    "displayName": "CVSS Score",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "CVSS base score (0-10)"
                 },
                 {
                     "fieldName": "vendor",
@@ -67,7 +78,18 @@
                     "multivalue": true,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "Affected vendor(s)"
+                },
+                {
+                    "fieldName": "affected_product",
+                    "displayName": "Affected Product",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": true,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "Affected product name(s)"
                 },
                 {
                     "fieldName": "cwe_id",
@@ -78,7 +100,7 @@
                     "multivalue": true,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "Common Weakness Enumeration ID(s)"
                 },
                 {
                     "fieldName": "assigner",
@@ -89,7 +111,73 @@
                     "multivalue": false,
                     "hidden": false,
                     "editable": true,
-                    "comment": ""
+                    "comment": "CVE assigning authority (CNA)"
+                },
+                {
+                    "fieldName": "ssvc_exploitation",
+                    "displayName": "SSVC Exploitation",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "SSVC exploitation status: active, poc, none"
+                },
+                {
+                    "fieldName": "ssvc_automatable",
+                    "displayName": "SSVC Automatable",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "SSVC automatable: yes, no"
+                },
+                {
+                    "fieldName": "ssvc_technical_impact",
+                    "displayName": "SSVC Technical Impact",
+                    "type": "string",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "SSVC technical impact: total, partial"
+                },
+                {
+                    "fieldName": "in_kev",
+                    "displayName": "In CISA KEV",
+                    "type": "boolean",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "Whether CVE is in CISA Known Exploited Vulnerabilities catalog"
+                },
+                {
+                    "fieldName": "epss_score",
+                    "displayName": "EPSS Score",
+                    "type": "number",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "FIRST EPSS probability score (0-1)"
+                },
+                {
+                    "fieldName": "has_cisa_adp",
+                    "displayName": "Has CISA ADP",
+                    "type": "boolean",
+                    "fieldSearch": "",
+                    "required": false,
+                    "multivalue": false,
+                    "hidden": false,
+                    "editable": true,
+                    "comment": "Whether CVE has CISA Vulnrichment data"
                 }
             ],
             "calculations": [
@@ -104,7 +192,7 @@
                             "multivalue": false,
                             "hidden": false,
                             "editable": true,
-                            "comment": ""
+                            "comment": "Normalized severity level"
                         }
                     ],
                     "calculationType": "Eval",
@@ -123,18 +211,56 @@
                             "multivalue": false,
                             "hidden": false,
                             "editable": true,
-                            "comment": ""
+                            "comment": "Unix timestamp of publication"
                         }
                     ],
                     "calculationType": "Eval",
                     "expression": "strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")",
                     "editable": true,
                     "comment": ""
+                },
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "risk_priority",
+                            "displayName": "Risk Priority",
+                            "type": "number",
+                            "fieldSearch": "",
+                            "required": false,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "comment": "Combined risk score (CVSS * EPSS factor)"
+                        }
+                    ],
+                    "calculationType": "Eval",
+                    "expression": "round(cvss_score * (1 + coalesce(epss_score, 0.01) * 10) * if(in_kev=\"true\", 2, 1), 2)",
+                    "editable": true,
+                    "comment": "Risk Priority = CVSS * (1 + EPSS*10) * KEV_multiplier"
+                },
+                {
+                    "outputFields": [
+                        {
+                            "fieldName": "patch_urgency",
+                            "displayName": "Patch Urgency",
+                            "type": "string",
+                            "fieldSearch": "",
+                            "required": false,
+                            "multivalue": false,
+                            "hidden": false,
+                            "editable": true,
+                            "comment": "Patch urgency categorization"
+                        }
+                    ],
+                    "calculationType": "Eval",
+                    "expression": "case(in_kev=\"true\" AND ssvc_exploitation=\"active\", \"IMMEDIATE\", in_kev=\"true\" OR ssvc_exploitation=\"active\", \"URGENT\", cvss_score>=9, \"HIGH\", cvss_score>=7, \"MEDIUM\", 1=1, \"NORMAL\")",
+                    "editable": true,
+                    "comment": "Patch urgency based on KEV, SSVC, and CVSS"
                 }
             ],
             "constraints": [
                 {
-                    "search": "index=main sourcetype=\"cveicu:record\" cve_state=PUBLISHED",
+                    "search": "index=main sourcetype=\"ta:cvelist:v5:record\" cve_state=PUBLISHED",
                     "owner": "CVE_Records"
                 }
             ],
