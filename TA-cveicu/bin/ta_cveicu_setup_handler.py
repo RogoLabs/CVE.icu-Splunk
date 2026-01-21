@@ -127,108 +127,56 @@ class TAcveicuSetupHandler(admin.MConfigHandler):
     
     def _mark_configured(self):
         """
-        Mark the app as configured using Splunk's Entity API.
+        Ensure the app is configured and refresh Splunk's configuration cache.
         
-        This is the Splunk-native approach required for:
-        - Splunk Cloud compatibility
-        - Search Head Cluster replication
-        - Proper UI cache invalidation
+        The is_configured=1 setting is already in default/app.conf, which is the
+        recommended approach as it:
+        - Works on Splunk Cloud (no filesystem writes needed)
+        - Replicates correctly on Search Head Clusters
+        - Survives app upgrades
         
-        The "Cache Killer" reload forces Splunk Web to immediately
-        recognize the configured state without requiring a restart.
+        This method performs the critical "Cache Killer" reload by POSTing to
+        /servicesNS/nobody/TA-cveicu/apps/local/TA-cveicu/_reload which forces
+        Splunk Web to immediately recognize the configured state and prevents
+        the redirect loop.
         """
         session_key = self.getSessionKey()
         
-        # Step 1: Update app configuration via Entity API
-        try:
-            # Fetch the app entity from configs/conf-app
-            app_entity = entity.getEntity(
-                ["configs", "conf-app", "install"],
-                None,
-                namespace=self.APP_NAME,
-                owner="nobody",
-                sessionKey=session_key
-            )
-            
-            # Set is_configured = 1 (Splunk uses 1/0 for boolean in conf)
-            app_entity["is_configured"] = "1"
-            
-            # Persist the change
-            entity.setEntity(app_entity, sessionKey=session_key)
-            logger.info("App marked as configured via Entity API (configs/conf-app)")
-            
-        except Exception as e:
-            logger.warning(f"Entity API (conf-app) failed: {e}, trying apps/local...")
-            
-            # Fallback: Try apps/local endpoint
-            try:
-                app_entity = entity.getEntity(
-                    ["apps", "local"],
-                    self.APP_NAME,
-                    namespace=self.APP_NAME,
-                    owner="nobody",
-                    sessionKey=session_key
-                )
-                app_entity["configured"] = "true"
-                entity.setEntity(app_entity, sessionKey=session_key)
-                logger.info("App marked as configured via Entity API (apps/local)")
-                
-            except Exception as e2:
-                logger.warning(f"Entity API (apps/local) failed: {e2}, trying REST...")
-                self._mark_configured_rest(session_key)
+        # Log that we're marking as configured
+        logger.info("[TA-cveicu] Marking app as configured (default/app.conf has is_configured=1)")
         
-        # Step 2: Cache Killer - Force Splunk Web to reload app state
+        # Cache Killer - Force Splunk Web to reload app configuration cache
+        # This is the critical step that destroys the redirect loop
         self._reload_app(session_key)
-    
-    def _mark_configured_rest(self, session_key):
-        """
-        Fallback: Mark configured using direct REST API call.
-        
-        Args:
-            session_key: Splunk session key for authentication
-        """
-        try:
-            endpoint = f"/servicesNS/nobody/{self.APP_NAME}/apps/local/{self.APP_NAME}"
-            postargs = {"configured": "true"}
-            
-            response, content = rest.simpleRequest(
-                endpoint,
-                sessionKey=session_key,
-                postargs=postargs,
-                method="POST"
-            )
-            
-            if response.status in (200, 201):
-                logger.info("App marked as configured via REST API")
-            else:
-                logger.warning(f"REST API returned status {response.status}")
-                
-        except Exception as e:
-            logger.error(f"REST API method failed: {e}")
-            raise
     
     def _reload_app(self, session_key):
         """
         Force Splunk to reload the app configuration (Cache Killer).
         
-        This refreshes Splunk's in-memory cache so the UI immediately
-        recognizes the is_configured=true setting without a restart.
+        This is the critical step that destroys Splunk Web's internal
+        configuration cache and prevents the redirect loop. The POST to
+        apps/local/TA-cveicu/_reload refreshes Splunk's in-memory cache
+        so the UI immediately recognizes is_configured=true.
         
         Args:
-            session_key: Splunk session key for authentication
+            session_key: Splunk session key from self.getSessionKey()
         """
         try:
-            # Primary: Reload specific app
+            # POST to apps/local/TA-cveicu/_reload to invalidate cache
             endpoint = f"/servicesNS/nobody/{self.APP_NAME}/apps/local/{self.APP_NAME}/_reload"
             response, content = rest.simpleRequest(
                 endpoint,
                 sessionKey=session_key,
                 method="POST"
             )
-            logger.info(f"App {self.APP_NAME} cache reloaded successfully")
+            
+            if response.status in (200, 201):
+                logger.info(f"[TA-cveicu] Cache reload successful (POST {endpoint})")
+            else:
+                logger.warning(f"[TA-cveicu] Cache reload returned status {response.status}")
             
         except Exception as e:
-            logger.warning(f"App-specific reload failed: {e}")
+            logger.warning(f"[TA-cveicu] App-specific reload failed: {e}")
             
             # Fallback: Reload all apps
             try:
@@ -238,9 +186,9 @@ class TAcveicuSetupHandler(admin.MConfigHandler):
                     sessionKey=session_key,
                     method="POST"
                 )
-                logger.info("All apps cache reloaded successfully")
+                logger.info("[TA-cveicu] All apps cache reloaded successfully (fallback)")
             except Exception as e2:
-                logger.warning(f"Full app reload also failed (non-critical): {e2}")
+                logger.warning(f"[TA-cveicu] Full app reload also failed (non-critical): {e2}")
         
         # Additional: Bump the app to invalidate browser cache
         try:
@@ -250,9 +198,9 @@ class TAcveicuSetupHandler(admin.MConfigHandler):
                 sessionKey=session_key,
                 method="POST"
             )
-            logger.debug("App bump successful")
+            logger.debug(f"[TA-cveicu] App bump successful")
         except Exception as e:
-            logger.debug(f"App bump failed (non-critical): {e}")
+            logger.debug(f"[TA-cveicu] App bump failed (non-critical): {e}")
     
     def _save_theme(self, theme):
         """
