@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4FC3F7"/>
+      <stop offset="100%" style="stop-color:#0277BD"/>
+    </linearGradient>
+  </defs>
+  <!-- Shield background -->
+  <path d="M18 2 L32 8 L32 16 C32 26 18 34 18 34 C18 34 4 26 4 16 L4 8 Z" fill="url(#shieldGrad)"/>
+  <!-- Shield border -->
+  <path d="M18 2 L32 8 L32 16 C32 26 18 34 18 34 C18 34 4 26 4 16 L4 8 Z" fill="none" stroke="#01579B" stroke-width="1"/>
+  <!-- CVE Text -->
+  <text x="18" y="16" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="white" text-anchor="middle">CVE</text>
+  <!-- Bug/vulnerability icon -->
+  <circle cx="18" cy="23" r="4" fill="white" opacity="0.9"/>
+  <circle cx="18" cy="23" r="2" fill="#0277BD"/>
+  <!-- Alert lines -->
+  <line x1="18" y1="18" x2="18" y2="19" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

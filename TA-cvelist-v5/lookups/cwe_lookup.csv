@@ -1,0 +1,13 @@
+# Placeholder for CWE lookup
+# Populate with CWE ID descriptions for enrichment
+cwe_id,cwe_name,cwe_description
+CWE-79,Improper Neutralization of Input During Web Page Generation,Cross-site Scripting (XSS)
+CWE-89,Improper Neutralization of Special Elements used in an SQL Command,SQL Injection
+CWE-78,Improper Neutralization of Special Elements used in an OS Command,OS Command Injection
+CWE-20,Improper Input Validation,Input Validation
+CWE-22,Improper Limitation of a Pathname to a Restricted Directory,Path Traversal
+CWE-125,Out-of-bounds Read,Memory Safety
+CWE-787,Out-of-bounds Write,Memory Safety
+CWE-416,Use After Free,Memory Safety
+CWE-476,NULL Pointer Dereference,Memory Safety
+CWE-190,Integer Overflow or Wraparound,Integer Handling

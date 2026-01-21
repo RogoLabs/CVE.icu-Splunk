@@ -1,3 +1,10 @@
+# Sensitive/temporary files - DO NOT COMMIT
+check_events.py
+seed_checkpoint.py
+props.conf
+collections.conf
+*.tar.gz
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

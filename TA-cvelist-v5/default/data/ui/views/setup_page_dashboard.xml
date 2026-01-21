@@ -1,0 +1,198 @@
+<dashboard version="1.1" script="setup_page.js" stylesheet="setup_page.css">
+    <label>Configuration</label>
+    <row>
+        <panel>
+            <html>
+                <style>
+                    .setup-container {
+                        max-width: 800px;
+                        margin: 20px auto;
+                        padding: 20px;
+                    }
+                    .setup-header {
+                        font-size: 24px;
+                        font-weight: bold;
+                        margin-bottom: 20px;
+                        color: #333;
+                    }
+                    .setup-description {
+                        margin-bottom: 30px;
+                        color: #666;
+                        line-height: 1.6;
+                    }
+                    .form-group {
+                        margin-bottom: 20px;
+                    }
+                    .form-group label {
+                        display: block;
+                        font-weight: bold;
+                        margin-bottom: 8px;
+                        color: #333;
+                    }
+                    .form-group input[type="password"],
+                    .form-group input[type="text"] {
+                        width: 100%;
+                        padding: 10px;
+                        border: 1px solid #ccc;
+                        border-radius: 4px;
+                        font-size: 14px;
+                    }
+                    .form-group .help-text {
+                        font-size: 12px;
+                        color: #888;
+                        margin-top: 5px;
+                    }
+                    .btn-save {
+                        background-color: #5CC05C;
+                        color: white;
+                        padding: 10px 30px;
+                        border: none;
+                        border-radius: 4px;
+                        font-size: 14px;
+                        cursor: pointer;
+                    }
+                    .btn-save:hover {
+                        background-color: #4CAF50;
+                    }
+                    .status-message {
+                        margin-top: 15px;
+                        padding: 10px;
+                        border-radius: 4px;
+                        display: none;
+                    }
+                    .status-success {
+                        background-color: #d4edda;
+                        color: #155724;
+                        border: 1px solid #c3e6cb;
+                    }
+                    .status-error {
+                        background-color: #f8d7da;
+                        color: #721c24;
+                        border: 1px solid #f5c6cb;
+                    }
+                    .instructions {
+                        background-color: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 4px;
+                        margin-bottom: 20px;
+                    }
+                    .instructions h4 {
+                        margin-top: 0;
+                        color: #333;
+                    }
+                    .instructions ol {
+                        margin: 0;
+                        padding-left: 20px;
+                    }
+                    .instructions li {
+                        margin-bottom: 8px;
+                    }
+                </style>
+                
+                <div class="setup-container">
+                    <div class="setup-header">CVE List V5 Add-on Configuration</div>
+                    
+                    <div class="setup-description">
+                        Configure your GitHub Personal Access Token for API access. Without a token, 
+                        the add-on is limited to 60 API requests per hour. With a token, you get 
+                        5,000 requests per hour, which is recommended for the initial baseline download.
+                    </div>
+                    
+                    <div class="instructions">
+                        <h4>How to Create a GitHub Token:</h4>
+                        <ol>
+                            <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal access tokens</a></li>
+                            <li>Click "Generate new token (classic)"</li>
+                            <li>Give it a name (e.g., "Splunk CVE List")</li>
+                            <li>Select scope: <code>public_repo</code> (read access to public repositories)</li>
+                            <li>Click "Generate token" and copy it</li>
+                        </ol>
+                    </div>
+                    
+                    <form id="setup-form">
+                        <div class="form-group">
+                            <label for="github_token">GitHub Personal Access Token</label>
+                            <input type="password" id="github_token" name="github_token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+                            <div class="help-text">Leave empty to use unauthenticated access (60 requests/hour limit)</div>
+                        </div>
+                        
+                        <button type="submit" class="btn-save">Save Configuration</button>
+                        
+                        <div id="status-message" class="status-message"></div>
+                    </form>
+                </div>
+                
+                <script>
+                    require([
+                        'jquery',
+                        'splunkjs/mvc',
+                        'splunkjs/mvc/simplexml/ready!'
+                    ], function($, mvc) {
+                        
+                        var service = mvc.createService();
+                        
+                        // Load existing configuration
+                        service.get('/servicesNS/nobody/TA-cvelist-v5/storage/passwords', {
+                            search: 'realm=TA-cvelist-v5'
+                        }, function(err, response) {
+                            if (!err &amp;&amp; response.data &amp;&amp; response.data.entry) {
+                                for (var i = 0; i &lt; response.data.entry.length; i++) {
+                                    if (response.data.entry[i].content.username === 'github_token') {
+                                        $('#github_token').val('********');
+                                        break;
+                                    }
+                                }
+                            }
+                        });
+                        
+                        // Handle form submission
+                        $('#setup-form').on('submit', function(e) {
+                            e.preventDefault();
+                            
+                            var token = $('#github_token').val();
+                            var statusDiv = $('#status-message');
+                            
+                            // Skip if masked value
+                            if (token === '********') {
+                                statusDiv.removeClass('status-error').addClass('status-success')
+                                    .text('Configuration unchanged.').show();
+                                return;
+                            }
+                            
+                            // Delete existing credential first
+                            service.del('/servicesNS/nobody/TA-cvelist-v5/storage/passwords/TA-cvelist-v5%3Agithub_token%3A', {}, function(err) {
+                                // Ignore delete errors (credential might not exist)
+                                
+                                if (token) {
+                                    // Create new credential
+                                    service.post('/servicesNS/nobody/TA-cvelist-v5/storage/passwords', {
+                                        name: 'github_token',
+                                        password: token,
+                                        realm: 'TA-cvelist-v5'
+                                    }, function(err, response) {
+                                        if (err) {
+                                            statusDiv.removeClass('status-success').addClass('status-error')
+                                                .text('Error saving token: ' + (err.data ? err.data.messages[0].text : err)).show();
+                                        } else {
+                                            statusDiv.removeClass('status-error').addClass('status-success')
+                                                .text('GitHub token saved successfully!').show();
+                                            $('#github_token').val('********');
+                                            
+                                            // Mark app as configured
+                                            service.post('/servicesNS/nobody/TA-cvelist-v5/apps/local/TA-cvelist-v5', {
+                                                configured: true
+                                            });
+                                        }
+                                    });
+                                } else {
+                                    statusDiv.removeClass('status-error').addClass('status-success')
+                                        .text('Token cleared. Using unauthenticated access.').show();
+                                }
+                            });
+                        });
+                    });
+                </script>
+            </html>
+        </panel>
+    </row>
+</dashboard>

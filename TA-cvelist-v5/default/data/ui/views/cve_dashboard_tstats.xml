@@ -1,0 +1,198 @@
+<dashboard version="1.1" theme="dark">
+    <label>CVE Dashboard</label>
+    <description>Real-time vulnerability intelligence from the CVE Program - Accelerated</description>
+    <fieldset submitButton="true" autoRun="true">
+        <input type="time" token="time_range" searchWhenChanged="true">
+            <label>Time Range</label>
+            <default>
+                <earliest>-7d@d</earliest>
+                <latest>now</latest>
+            </default>
+        </input>
+        <input type="dropdown" token="severity_filter" searchWhenChanged="true">
+            <label>Severity</label>
+            <choice value="*">All</choice>
+            <choice value="CRITICAL">Critical</choice>
+            <choice value="HIGH">High</choice>
+            <choice value="MEDIUM">Medium</choice>
+            <choice value="LOW">Low</choice>
+            <default>*</default>
+        </input>
+    </fieldset>
+    <row>
+        <panel>
+            <single>
+                <title>Total CVEs Ingested</title>
+                <search>
+                    <query>| tstats dc(cve_id) as total from datamodel=CVE_Intelligence.CVE_Records</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0x006d9c"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>New CVEs (Selected Period)</title>
+                <search>
+                    <query>| tstats dc(cve_id) as new_cves from datamodel=CVE_Intelligence.CVE_Records where earliest="$time_range.earliest$" latest="$time_range.latest$"</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+                <option name="rangeValues">[50,200]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>Critical Severity</title>
+                <search>
+                    <query>| tstats dc(cve_id) as critical from datamodel=CVE_Intelligence.CVE_Records where CVE_Records.cvss_severity="CRITICAL" earliest="$time_range.earliest$" latest="$time_range.latest$"</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xdc4e41"]</option>
+                <option name="rangeValues">[5,20]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>High Severity</title>
+                <search>
+                    <query>| tstats dc(cve_id) as high from datamodel=CVE_Intelligence.CVE_Records where CVE_Records.cvss_severity="HIGH" earliest="$time_range.earliest$" latest="$time_range.latest$"</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="rangeColors">["0x53a051","0xf8be34","0xf1813f"]</option>
+                <option name="rangeValues">[10,50]</option>
+                <option name="useColors">1</option>
+            </single>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <chart>
+                <title>CVE Publication Timeline</title>
+                <search>
+                    <query>| tstats count from datamodel=CVE_Intelligence.CVE_Records by _time CVE_Records.cvss_severity span=1d
+| rename CVE_Records.cvss_severity as severity
+| eval severity=if(isnull(severity) OR severity="", "NONE", severity)
+| timechart span=1d sum(count) by severity</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="charting.chart">column</option>
+                <option name="charting.chart.stackMode">stacked</option>
+                <option name="charting.legend.placement">bottom</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Severity Distribution</title>
+                <search>
+                    <query>| tstats count from datamodel=CVE_Intelligence.CVE_Records by CVE_Records.cvss_severity
+| rename CVE_Records.cvss_severity as severity
+| eval severity=if(isnull(severity) OR severity="", "NONE", severity)
+| sort - count</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
+            </chart>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <chart>
+                <title>Top 10 Affected Vendors</title>
+                <search>
+                    <query>| tstats count from datamodel=CVE_Intelligence.CVE_Records by CVE_Records.vendor
+| rename CVE_Records.vendor as vendor
+| where isnotnull(vendor) AND vendor!="n/a" AND vendor!=""
+| sort - count
+| head 10</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Top 10 Weakness Types (CWE)</title>
+                <search>
+                    <query>| tstats count from datamodel=CVE_Intelligence.CVE_Records by CVE_Records.cwe_id
+| rename CVE_Records.cwe_id as cwe
+| where isnotnull(cwe) AND cwe!=""
+| sort - count
+| head 10</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+            </chart>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <title>Recent High/Critical CVEs</title>
+            <table>
+                <search>
+                    <query>| tstats latest(_time) as _time values(CVE_Records.date_published) as date_published values(CVE_Records.cvss_severity) as severity values(CVE_Records.vendor) as vendor from datamodel=CVE_Intelligence.CVE_Records where CVE_Records.cvss_severity IN ("CRITICAL", "HIGH") by CVE_Records.cve_id
+| rename CVE_Records.cve_id as cve_id
+| sort - _time
+| head 20
+| table cve_id, date_published, severity, vendor</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <title>CVE Lookup</title>
+            <input type="text" token="cve_search" searchWhenChanged="false">
+                <label>CVE ID</label>
+                <default>CVE-2026-</default>
+            </input>
+            <table>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record" cve_id="$cve_search$*"
+| head 50
+| table cve_id, cve_state, date_published, cvss_severity, vendor, assigner</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.cve_id$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+</dashboard>

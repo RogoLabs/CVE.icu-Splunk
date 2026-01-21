@@ -1,0 +1,397 @@
+<dashboard version="1.1" theme="dark">
+    <label>CVE Intelligence Dashboard</label>
+    <description>Real-time vulnerability intelligence from the CVE Program | Data refreshes hourly</description>
+    
+    <fieldset submitButton="false" autoRun="true">
+        <input type="time" token="time_range" searchWhenChanged="true">
+            <label>Time Range</label>
+            <default>
+                <earliest>-1y@d</earliest>
+                <latest>now</latest>
+            </default>
+        </input>
+        <input type="dropdown" token="severity_filter" searchWhenChanged="true">
+            <label>Severity</label>
+            <choice value="*">All Severities</choice>
+            <choice value="CRITICAL">Critical</choice>
+            <choice value="HIGH">High</choice>
+            <choice value="MEDIUM">Medium</choice>
+            <choice value="LOW">Low</choice>
+            <default>*</default>
+        </input>
+        <input type="dropdown" token="vendor_filter" searchWhenChanged="true">
+            <label>Vendor</label>
+            <choice value="*">All Vendors</choice>
+            <fieldForLabel>vendor</fieldForLabel>
+            <fieldForValue>vendor</fieldForValue>
+            <search>
+                <query>index=main sourcetype="ta:cvelist:v5:record" earliest=-30d
+| spath path=containers.cna.affected{0}.vendor output=vendor
+| where isnotnull(vendor) AND vendor!="n/a" AND vendor!="Unknown"
+| stats count by vendor
+| sort - count
+| head 20
+| fields vendor</query>
+            </search>
+            <default>*</default>
+        </input>
+    </fieldset>
+    
+    <row>
+        <panel>
+            <single>
+                <title>Total CVEs in Database</title>
+                <search>
+                    <query>| inputlookup cve_total.csv | table total_cves</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x006d9c","0x006d9c"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+                <option name="field">total_cves</option>
+                <option name="underLabel">PUBLISHED</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>CVEs in Period</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| stats sum(cve_count) as new_cves</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x53a051","0x53a051"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+                <option name="underLabel">NEW</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>Critical</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="CRITICAL"
+| stats sum(cve_count) as critical</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0xdc4e41","0xdc4e41"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+                <option name="underLabel">CVSS 9.0-10.0</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>High</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="HIGH"
+| stats sum(cve_count) as high</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0xf1813f","0xf1813f"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+                <option name="underLabel">CVSS 7.0-8.9</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>Medium</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="MEDIUM"
+| stats sum(cve_count) as medium</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0xf8be34","0xf8be34"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+                <option name="underLabel">CVSS 4.0-6.9</option>
+            </single>
+        </panel>
+        <panel>
+            <single>
+                <title>Low</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$") AND severity="LOW"
+| stats sum(cve_count) as low</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="colorMode">block</option>
+                <option name="drilldown">none</option>
+                <option name="numberPrecision">0</option>
+                <option name="rangeColors">["0x53a051","0x53a051"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="useColors">1</option>
+                <option name="underLabel">CVSS 0.1-3.9</option>
+            </single>
+        </panel>
+    </row>
+    
+    <row>
+        <panel>
+            <chart>
+                <title>CVE Publication Timeline by Severity</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval _time=strptime(date_published, "%Y-%m-%d")
+| where _time &gt;= relative_time(now(), "$time_range.earliest$")
+| timechart span=1d sum(cve_count) by severity</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="charting.chart">area</option>
+                <option name="charting.chart.stackMode">stacked</option>
+                <option name="charting.legend.placement">bottom</option>
+                <option name="charting.chart.nullValueMode">zero</option>
+                <option name="charting.axisTitleX.visibility">collapsed</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
+                <option name="height">300</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <row>
+        <panel>
+            <chart>
+                <title>Severity Distribution</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval date_epoch=strptime(date_published, "%Y-%m-%d")
+| where date_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| stats sum(cve_count) as count by severity
+| sort - count</query>
+                    <earliest>$time_range.earliest$</earliest>
+                    <latest>$time_range.latest$</latest>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.chart.sliceCollapsingThreshold">0.01</option>
+                <option name="charting.fieldColors">{"CRITICAL":"#DC4E41","HIGH":"#F1813F","MEDIUM":"#F8BE34","LOW":"#53A051","NONE":"#708794"}</option>
+                <option name="height">280</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>CVSS Score Distribution</title>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| spath path=cveMetadata.state output=cve_state
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=containers.cna.metrics{0}.cvssV3_1.baseScore output=cvss_score
+| where cve_state="PUBLISHED" AND isnotnull(cvss_score)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| eval score_bucket=case(
+    cvss_score&gt;=9.0, "9.0-10.0 Critical",
+    cvss_score&gt;=7.0, "7.0-8.9 High",
+    cvss_score&gt;=4.0, "4.0-6.9 Medium",
+    cvss_score&gt;=0.1, "0.1-3.9 Low",
+    true(), "None")
+| stats count by score_bucket
+| sort score_bucket</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">pie</option>
+                <option name="charting.fieldColors">{"9.0-10.0 Critical":"#DC4E41","7.0-8.9 High":"#F1813F","4.0-6.9 Medium":"#F8BE34","0.1-3.9 Low":"#53A051","None":"#708794"}</option>
+                <option name="height">280</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>CVEs by Year Published</title>
+                <search>
+                    <query>| inputlookup cve_daily_summary.csv
+| eval year=substr(date_published, 1, 4)
+| stats sum(cve_count) as count by year
+| sort year</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">column</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">minmax</option>
+                <option name="charting.axisTitleX.visibility">collapsed</option>
+                <option name="height">280</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <row>
+        <panel>
+            <chart>
+                <title>Top 10 Affected Vendors</title>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.state output=cve_state
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=containers.cna.affected{0}.vendor output=vendor
+| where cve_state="PUBLISHED" AND isnotnull(date_published) AND isnotnull(vendor) AND vendor!="n/a" AND vendor!="Unknown"
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| stats dc(cve_id) as cve_count by vendor
+| sort - cve_count
+| head 10</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+                <option name="charting.seriesColors">[0x006d9c]</option>
+                <option name="height">300</option>
+            </chart>
+        </panel>
+        <panel>
+            <chart>
+                <title>Top 10 Weakness Types (CWE)</title>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.state output=cve_state
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=containers.cna.problemTypes{0}.descriptions{0}.cweId output=cwe_id
+| where cve_state="PUBLISHED" AND isnotnull(date_published) AND isnotnull(cwe_id)
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| stats dc(cve_id) as count by cwe_id
+| sort - count
+| head 10
+| rename cwe_id as "Weakness Type"</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="charting.chart.showDataLabels">all</option>
+                <option name="charting.seriesColors">[0x5a4575]</option>
+                <option name="height">300</option>
+            </chart>
+        </panel>
+    </row>
+    
+    <row>
+        <panel>
+            <title>Recent Critical and High Severity CVEs</title>
+            <table>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| spath path=cveMetadata.cveId output=cve_id
+| spath path=cveMetadata.state output=cve_state
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=containers.cna.metrics{0}.cvssV3_1.baseSeverity output=severity
+| spath path=containers.cna.metrics{0}.cvssV3_1.baseScore output=cvss_score
+| spath path=containers.cna.affected{0}.vendor output=vendor
+| spath path=containers.cna.affected{0}.product output=product
+| spath path=containers.cna.title output=title
+| where cve_state="PUBLISHED" AND (severity="CRITICAL" OR severity="HIGH")
+| eval pub_epoch=strptime(date_published, "%Y-%m-%dT%H:%M:%S")
+| where pub_epoch &gt;= relative_time(now(), "$time_range.earliest$")
+| eval date_published=strftime(pub_epoch, "%Y-%m-%d %H:%M")
+| sort - pub_epoch
+| head 25
+| table cve_id, date_published, severity, cvss_score, vendor, product, title
+| rename cve_id as "CVE ID", date_published as "Published", severity as "Severity", cvss_score as "CVSS", vendor as "Vendor", product as "Product", title as "Title"</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="dataOverlayMode">none</option>
+                <option name="drilldown">row</option>
+                <option name="wrap">true</option>
+                <format type="color" field="Severity">
+                    <colorPalette type="map">{"CRITICAL":#DC4E41,"HIGH":#F1813F}</colorPalette>
+                </format>
+                <format type="color" field="CVSS">
+                    <colorPalette type="minMidMax" maxColor="#DC4E41" midColor="#F8BE34" minColor="#53A051"></colorPalette>
+                    <scale type="minMidMax" midValue="7"></scale>
+                </format>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.CVE ID$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+    
+    <row>
+        <panel>
+            <title>CVE Search</title>
+            <input type="text" token="cve_search" searchWhenChanged="false">
+                <label>Search CVE ID</label>
+                <default>CVE-2025-</default>
+            </input>
+            <table>
+                <search>
+                    <query>index=main sourcetype="ta:cvelist:v5:record"
+| spath path=cveMetadata.cveId output=cve_id
+| search cve_id="$cve_search$*"
+| head 50
+| spath path=cveMetadata.state output=cve_state
+| spath path=cveMetadata.datePublished output=date_published
+| spath path=containers.cna.metrics{0}.cvssV3_1.baseSeverity output=severity
+| spath path=containers.cna.metrics{0}.cvssV3_1.baseScore output=cvss_score
+| spath path=containers.cna.affected{0}.vendor output=vendor
+| spath path=containers.cna.title output=title
+| eval date_published=strftime(strptime(date_published, "%Y-%m-%dT%H:%M:%S"), "%Y-%m-%d")
+| table cve_id, cve_state, date_published, severity, cvss_score, vendor, title
+| rename cve_id as "CVE ID", cve_state as "State", date_published as "Published", severity as "Severity", cvss_score as "CVSS", vendor as "Vendor", title as "Title"</query>
+                    <earliest>0</earliest>
+                    <latest>now</latest>
+                </search>
+                <option name="count">10</option>
+                <option name="drilldown">row</option>
+                <format type="color" field="Severity">
+                    <colorPalette type="map">{"CRITICAL":#DC4E41,"HIGH":#F1813F,"MEDIUM":#F8BE34,"LOW":#53A051}</colorPalette>
+                </format>
+                <format type="color" field="State">
+                    <colorPalette type="map">{"PUBLISHED":#53A051,"REJECTED":#DC4E41}</colorPalette>
+                </format>
+                <drilldown>
+                    <link target="_blank">https://www.cve.org/CVERecord?id=$row.CVE ID$</link>
+                </drilldown>
+            </table>
+        </panel>
+    </row>
+    
+    <row>
+        <panel>
+            <html>
+                <div style="text-align: center; padding: 10px; color: #999; font-size: 12px;">
+                    Data Source: <a href="https://github.com/CVEProject/cvelistV5" target="_blank" style="color: #006d9c;">CVE Program GitHub Repository</a> |
+                    Dashboard refreshes automatically | Click any CVE ID to view details on CVE.org
+                </div>
+            </html>
+        </panel>
+    </row>
+</dashboard>
