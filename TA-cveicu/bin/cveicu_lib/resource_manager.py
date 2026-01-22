@@ -31,12 +31,14 @@ class ResourceManager:
     - Search commands: ~1 GB
     
     This class provides memory monitoring and triggers garbage collection
-    when approaching limits.
+    when approaching limits. Logs "Resource Limit Warning" events to _internal
+    when memory exceeds 400MB for Splunk Cloud admin visibility.
     """
     
     DEFAULT_MEMORY_LIMIT_MB = 512
     MEMORY_WARNING_THRESHOLD = 0.8  # 80% of limit
     MEMORY_CRITICAL_THRESHOLD = 0.9  # 90% of limit
+    RESOURCE_LIMIT_WARNING_MB = 400  # Log to _internal above this
     
     def __init__(
         self,
@@ -55,6 +57,7 @@ class ResourceManager:
         self.logger = logger or logging.getLogger("ta_cveicu.resource_manager")
         self._last_gc_time = 0
         self._gc_cooldown = 30  # Minimum seconds between forced GC
+        self._resource_warning_logged = False  # Prevent log spam
     
     def get_memory_usage_mb(self) -> float:
         """
@@ -81,6 +84,9 @@ class ResourceManager:
         """
         Check current memory usage against limit.
         
+        Logs a "Resource Limit Warning" event to _internal index when
+        memory exceeds 400MB, providing visibility for Splunk Cloud admins.
+        
         Returns:
             True if within safe limits, False if approaching limit
         """
@@ -91,6 +97,15 @@ class ResourceManager:
             return True
         
         usage_ratio = current_mb / self.max_memory_mb
+        
+        # Log Resource Limit Warning to _internal when >400MB (one-time per session)
+        if current_mb > self.RESOURCE_LIMIT_WARNING_MB and not self._resource_warning_logged:
+            self.logger.warning(
+                f"Resource Limit Warning: TA-cveicu memory usage exceeded {self.RESOURCE_LIMIT_WARNING_MB}MB threshold. "
+                f"Current usage: {current_mb:.1f}MB, Limit: {self.max_memory_mb}MB, "
+                f"Usage ratio: {usage_ratio:.1%}. Consider reducing batch sizes or increasing interval."
+            )
+            self._resource_warning_logged = True
         
         if usage_ratio > self.MEMORY_CRITICAL_THRESHOLD:
             self.logger.warning(

@@ -1,6 +1,38 @@
-# Application-level permissions
+# Application-level permissions for TA-cveicu
+# Exports all objects to system for global visibility
+# Restricts write access to admin roles only
 
 []
 export = system
 owner = admin
-access = read : [ * ], write : [ admin, sc_admin, power ]
+access = read : [ * ], write : [ admin, sc_admin ]
+
+# Views are visible to all, writable by admins
+[views]
+export = system
+owner = admin
+access = read : [ * ], write : [ admin, sc_admin ]
+
+# Lookups are globally available
+[lookups]
+export = system
+owner = admin
+access = read : [ * ], write : [ admin, sc_admin ]
+
+# Saved searches run as owner
+[savedsearches]
+export = system
+owner = admin
+access = read : [ * ], write : [ admin, sc_admin ]
+
+# Inputs configuration
+[inputs]
+export = system
+owner = admin
+access = read : [ * ], write : [ admin, sc_admin ]
+
+# REST handlers
+[restmap]
+export = system
+owner = admin
+access = read : [ * ], write : [ admin, sc_admin ]
