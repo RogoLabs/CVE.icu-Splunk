@@ -1,4 +1,4 @@
-<dashboard version="1.1" hideEdit="true" hideFilters="true" script="setup_complete.js">
+<dashboard version="1.1" hideEdit="true" hideFilters="true" script="setup_page.js">
     <label>CVE.ICU Setup</label>
     <description>Configure CVE.ICU</description>
     
@@ -58,11 +58,16 @@
                         cursor: pointer;
                         text-decoration: none;
                         margin-top: 20px;
+                        transition: background 0.2s ease;
                     }
                     .btn-complete:hover {
                         background: #b71c1c;
                         color: #fff;
                         text-decoration: none;
+                    }
+                    .btn-complete:disabled {
+                        background: #999;
+                        cursor: not-allowed;
                     }
                     .setup-status {
                         margin-top: 15px;
@@ -126,61 +131,10 @@
                     
                     <div id="setup-status" class="setup-status"></div>
                     
-                    <button id="launch-btn" class="btn-complete" onclick="completeSetup()">
+                    <button id="launch-btn" type="button" class="btn-complete">
                         Launch Dashboard
                     </button>
                 </div>
-                
-                <script>
-                    function completeSetup() {
-                        var statusDiv = document.getElementById('setup-status');
-                        var btn = document.getElementById('launch-btn');
-                        
-                        // Show loading state
-                        statusDiv.className = 'setup-status loading';
-                        statusDiv.textContent = 'Completing setup...';
-                        btn.disabled = true;
-                        btn.style.opacity = '0.6';
-                        
-                        // Call the setup REST handler to mark as configured
-                        var xhr = new XMLHttpRequest();
-                        xhr.open('POST', '/en-US/splunkd/__raw/servicesNS/nobody/TA-cveicu/TA_cveicu_setup/github_settings', true);
-                        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-                        xhr.setRequestHeader('X-Splunk-Form-Key', window.$C ? window.$C.FORM_KEY : '');
-                        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-                        
-                        xhr.onreadystatechange = function() {
-                            if (xhr.readyState === 4) {
-                                if (xhr.status === 200 || xhr.status === 201) {
-                                    statusDiv.className = 'setup-status success';
-                                    statusDiv.textContent = 'Setup complete! Redirecting...';
-                                    
-                                    // Small delay to allow Splunk to refresh, then redirect
-                                    setTimeout(function() {
-                                        window.location.href = '/en-US/app/TA-cveicu/cve_dashboard_instant';
-                                    }, 500);
-                                } else {
-                                    // Even if the REST call fails, try to redirect anyway
-                                    // The default/app.conf already has is_configured=true
-                                    statusDiv.className = 'setup-status success';
-                                    statusDiv.textContent = 'Redirecting to dashboard...';
-                                    setTimeout(function() {
-                                        window.location.href = '/en-US/app/TA-cveicu/cve_dashboard_instant';
-                                    }, 300);
-                                }
-                            }
-                        };
-                        
-                        xhr.onerror = function() {
-                            // On error, still redirect - default config should work
-                            window.location.href = '/en-US/app/TA-cveicu/cve_dashboard_instant';
-                        };
-                        
-                        // Send theme preference along with empty token
-                        var theme = document.querySelector('input[name="theme"]:checked').value;
-                        xhr.send('github_token=&amp;theme=' + theme);
-                    }
-                </script>
             </html>
         </panel>
     </row>
