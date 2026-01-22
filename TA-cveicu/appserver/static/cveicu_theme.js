@@ -1,97 +1,93 @@
 /**
  * CVE.ICU Theme Manager
  * 
- * Applies user's theme preference (light/dark) to dashboards.
- * Reads preference from REST endpoint and applies CSS class.
+ * Applies saved theme from localStorage to all CVE.ICU dashboards.
+ * This script runs on every dashboard page load to ensure consistent theming.
+ * 
+ * Theme storage: localStorage key 'cveicu_theme' = 'light' | 'dark'
  */
 
-require([
-    'jquery',
-    'splunkjs/mvc',
-    'splunkjs/mvc/simplexml/ready!'
-], function($, mvc) {
+(function() {
     'use strict';
     
-    // Configuration
-    var CONFIG = {
-        REST_ENDPOINT: '/servicesNS/nobody/TA-cveicu/ta_cveicu/ta_cveicu_settings/github_settings'
-    };
+    var STORAGE_KEY = 'cveicu_theme';
     
     /**
-     * Get the current locale from the URL path
+     * Get theme from localStorage
      */
-    function getLocale() {
-        var match = window.location.pathname.match(/^\/([a-z]{2}-[A-Z]{2})\//);
-        return match ? match[1] : 'en-US';
+    function getTheme() {
+        try {
+            return localStorage.getItem(STORAGE_KEY) || 'light';
+        } catch (e) {
+            return 'light';
+        }
     }
     
     /**
-     * Build the full URL with locale prefix
+     * Apply theme immediately (before page fully loads to prevent flash)
      */
-    function buildUrl(path) {
-        var locale = getLocale();
-        return '/' + locale + '/splunkd/__raw' + path;
-    }
-    
-    // Function to apply theme
-    function applyTheme(theme) {
-        var $dashboard = $('.dashboard-body');
-        var $html = $('html');
+    function applyThemeEarly(theme) {
+        var isDark = (theme === 'dark');
         
-        if (theme === 'dark') {
-            $html.addClass('dark');
-            $dashboard.addClass('dark');
-            // Update dashboard theme attribute if possible
-            $('[data-view="views/shared/splunkbar/Master"]').addClass('dark');
+        // Apply to html/body immediately
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.body && document.body.classList.add('dark');
         } else {
-            $html.removeClass('dark');
-            $dashboard.removeClass('dark');
-            $('[data-view="views/shared/splunkbar/Master"]').removeClass('dark');
+            document.documentElement.classList.remove('dark');
+            document.body && document.body.classList.remove('dark');
+        }
+    }
+    
+    /**
+     * Apply theme after Splunk loads (for dashboard elements)
+     */
+    function applyThemeFull(theme) {
+        var isDark = (theme === 'dark');
+        
+        // Dashboard body
+        var dashBody = document.querySelector('.dashboard-body');
+        if (dashBody) {
+            dashBody.classList.toggle('dark', isDark);
         }
         
-        console.log('[TA-cveicu] Theme applied:', theme);
+        // Splunk bar
+        var splunkBar = document.querySelector('[data-view="views/shared/splunkbar/Master"]');
+        if (splunkBar) {
+            splunkBar.classList.toggle('dark', isDark);
+        }
+        
+        // Shared chrome
+        var chrome = document.querySelector('.shared-page-chrome');
+        if (chrome) {
+            chrome.classList.toggle('dark', isDark);
+        }
+        
+        console.log('[CVE.ICU] Theme fully applied:', theme);
     }
     
-    // Function to fetch theme from settings
-    function fetchAndApplyTheme() {
-        var url = buildUrl(CONFIG.REST_ENDPOINT) + '?output_mode=json';
-        
-        $.ajax({
-            url: url,
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                var theme = 'light'; // default
-                try {
-                    if (data && data.entry && data.entry[0] && data.entry[0].content) {
-                        theme = data.entry[0].content.theme || 'light';
-                    }
-                } catch (e) {
-                    console.log('[TA-cveicu] Using default theme');
-                }
-                applyTheme(theme);
-            },
-            error: function(xhr, status, error) {
-                console.warn('[TA-cveicu] Theme fetch failed:', status, error);
-                // On error, use light theme
-                applyTheme('light');
-            }
+    // Apply early (prevents flash of wrong theme)
+    var theme = getTheme();
+    applyThemeEarly(theme);
+    
+    // Apply full theme after DOM loads
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            applyThemeFull(theme);
+        });
+    } else {
+        applyThemeFull(theme);
+    }
+    
+    // Also apply after Splunk's async loading completes
+    if (typeof require !== 'undefined') {
+        require(['jquery', 'splunkjs/mvc/simplexml/ready!'], function($) {
+            applyThemeFull(theme);
+            
+            // Re-apply after a short delay to catch late-loading elements
+            setTimeout(function() {
+                applyThemeFull(theme);
+            }, 500);
         });
     }
-    
-    // Also check URL parameter for immediate override
-    function getUrlTheme() {
-        var urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('theme');
-    }
-    
-    // Apply theme on page load
-    $(document).ready(function() {
-        var urlTheme = getUrlTheme();
-        if (urlTheme) {
-            applyTheme(urlTheme);
-        } else {
-            fetchAndApplyTheme();
-        }
-    });
-});
+})();

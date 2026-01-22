@@ -1,162 +1,447 @@
 <dashboard version="1.1" hideEdit="true" hideFilters="true" script="setup_page.js">
     <label>CVE.ICU Setup</label>
-    <description>Configure CVE.ICU</description>
+    <description>Configure your CVE intelligence platform</description>
     
     <row>
         <panel>
             <html>
                 <style>
-                    /* Theme-aware setup page using CSS custom properties */
+                    /* ================================================================
+                       CVE.ICU Setup Page - World-Class Theme-Aware Design
+                       ================================================================ */
+                    
+                    /* CSS Custom Properties for theming */
+                    :root {
+                        --cveicu-bg-primary: #ffffff;
+                        --cveicu-bg-secondary: #f8f9fa;
+                        --cveicu-bg-tertiary: #e9ecef;
+                        --cveicu-text-primary: #212529;
+                        --cveicu-text-secondary: #6c757d;
+                        --cveicu-text-muted: #adb5bd;
+                        --cveicu-border: #dee2e6;
+                        --cveicu-shadow: rgba(0, 0, 0, 0.08);
+                        --cveicu-shadow-lg: rgba(0, 0, 0, 0.12);
+                        --cveicu-accent: #dc3545;
+                        --cveicu-accent-hover: #c82333;
+                        --cveicu-success: #28a745;
+                        --cveicu-info: #17a2b8;
+                    }
+                    
+                    /* Dark theme overrides */
+                    html.dark, body.dark, [data-theme="dark"] {
+                        --cveicu-bg-primary: #1a1d21;
+                        --cveicu-bg-secondary: #22262b;
+                        --cveicu-bg-tertiary: #2a2f35;
+                        --cveicu-text-primary: #f8f9fa;
+                        --cveicu-text-secondary: #adb5bd;
+                        --cveicu-text-muted: #6c757d;
+                        --cveicu-border: #3d4349;
+                        --cveicu-shadow: rgba(0, 0, 0, 0.3);
+                        --cveicu-shadow-lg: rgba(0, 0, 0, 0.5);
+                    }
+                    
+                    /* Hide default Splunk panel styling */
+                    .dashboard-panel .panel-body {
+                        background: transparent !important;
+                        border: none !important;
+                    }
+                    
+                    /* Main container */
                     .setup-container {
-                        max-width: 700px;
-                        margin: 40px auto;
-                        padding: 40px;
-                        background: var(--splunk-semantic-color-background-default, #fff);
-                        border-radius: 12px;
-                        box-shadow: 0 2px 15px var(--splunk-semantic-color-shadow, rgba(0,0,0,0.1));
+                        max-width: 680px;
+                        margin: 30px auto;
+                        padding: 0;
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    }
+                    
+                    /* Card styling */
+                    .setup-card {
+                        background: var(--cveicu-bg-primary);
+                        border-radius: 16px;
+                        box-shadow: 0 4px 24px var(--cveicu-shadow-lg);
+                        overflow: hidden;
+                        transition: all 0.3s ease;
+                    }
+                    
+                    /* Header with gradient */
+                    .setup-header {
+                        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+                        padding: 40px 40px 35px;
                         text-align: center;
-                        color: var(--splunk-semantic-color-text-default, #333);
-                        transition: background 0.3s ease, color 0.3s ease;
+                        position: relative;
                     }
+                    
+                    .setup-header::after {
+                        content: '';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        height: 6px;
+                        background: linear-gradient(90deg, 
+                            rgba(255,255,255,0.1) 0%, 
+                            rgba(255,255,255,0.3) 50%, 
+                            rgba(255,255,255,0.1) 100%);
+                    }
+                    
+                    .setup-logo {
+                        font-size: 56px;
+                        margin-bottom: 12px;
+                        text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                    }
+                    
                     .setup-header h1 {
-                        color: #d32f2f;
+                        color: #ffffff;
                         font-size: 32px;
-                        margin-bottom: 10px;
+                        font-weight: 700;
+                        margin: 0 0 8px 0;
+                        letter-spacing: -0.5px;
                     }
+                    
                     .setup-header p {
-                        color: var(--splunk-semantic-color-text-secondary, #666);
+                        color: rgba(255,255,255,0.9);
                         font-size: 16px;
-                        margin-bottom: 30px;
-                    }
-                    .info-section {
-                        background: var(--splunk-semantic-color-background-secondary, #f5f5f5);
-                        padding: 20px;
-                        border-radius: 8px;
-                        margin: 20px 0;
-                        text-align: left;
-                        border: 1px solid var(--splunk-semantic-color-border-default, transparent);
-                    }
-                    .info-section h3 {
-                        margin: 0 0 10px 0;
-                        color: var(--splunk-semantic-color-text-default, #333);
-                    }
-                    .info-section p {
                         margin: 0;
-                        color: var(--splunk-semantic-color-text-secondary, #666);
+                        font-weight: 400;
+                    }
+                    
+                    /* Content area */
+                    .setup-content {
+                        padding: 32px 40px 40px;
+                    }
+                    
+                    /* Feature list */
+                    .feature-grid {
+                        display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 16px;
+                        margin-bottom: 28px;
+                    }
+                    
+                    .feature-item {
+                        display: flex;
+                        align-items: flex-start;
+                        gap: 12px;
+                        padding: 16px;
+                        background: var(--cveicu-bg-secondary);
+                        border-radius: 10px;
+                        border: 1px solid var(--cveicu-border);
+                        transition: all 0.2s ease;
+                    }
+                    
+                    .feature-item:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px var(--cveicu-shadow);
+                    }
+                    
+                    .feature-icon {
+                        font-size: 24px;
+                        flex-shrink: 0;
+                    }
+                    
+                    .feature-text {
+                        color: var(--cveicu-text-primary);
                         font-size: 14px;
+                        font-weight: 500;
+                        line-height: 1.4;
                     }
-                    .info-section ul {
-                        margin: 10px 0 0 0;
-                        padding-left: 20px;
-                        color: var(--splunk-semantic-color-text-secondary, #666);
+                    
+                    /* Info section */
+                    .info-section {
+                        background: var(--cveicu-bg-secondary);
+                        border: 1px solid var(--cveicu-border);
+                        border-radius: 12px;
+                        padding: 20px 24px;
+                        margin-bottom: 24px;
                     }
-                    .btn-complete {
-                        display: inline-block;
-                        padding: 15px 50px;
+                    
+                    .info-section h3 {
+                        color: var(--cveicu-text-primary);
+                        font-size: 16px;
+                        font-weight: 600;
+                        margin: 0 0 12px 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    
+                    .info-section p {
+                        color: var(--cveicu-text-secondary);
+                        font-size: 14px;
+                        line-height: 1.6;
+                        margin: 0;
+                    }
+                    
+                    /* Theme selector */
+                    .theme-section {
+                        background: var(--cveicu-bg-secondary);
+                        border: 1px solid var(--cveicu-border);
+                        border-radius: 12px;
+                        padding: 24px;
+                        margin-bottom: 28px;
+                    }
+                    
+                    .theme-section h3 {
+                        color: var(--cveicu-text-primary);
+                        font-size: 16px;
+                        font-weight: 600;
+                        margin: 0 0 16px 0;
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    
+                    .theme-options {
+                        display: flex;
+                        gap: 12px;
+                    }
+                    
+                    .theme-option {
+                        flex: 1;
+                        position: relative;
+                    }
+                    
+                    .theme-option input[type="radio"] {
+                        position: absolute;
+                        opacity: 0;
+                        width: 100%;
+                        height: 100%;
+                        cursor: pointer;
+                        z-index: 2;
+                    }
+                    
+                    .theme-option-label {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        padding: 20px 16px;
+                        background: var(--cveicu-bg-tertiary);
+                        border: 2px solid var(--cveicu-border);
+                        border-radius: 10px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+                    
+                    .theme-option input[type="radio"]:checked + .theme-option-label {
+                        border-color: var(--cveicu-accent);
+                        background: var(--cveicu-bg-primary);
+                        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+                    }
+                    
+                    .theme-option:hover .theme-option-label {
+                        border-color: var(--cveicu-text-muted);
+                    }
+                    
+                    .theme-option-icon {
+                        font-size: 32px;
+                        margin-bottom: 8px;
+                    }
+                    
+                    .theme-option-name {
+                        color: var(--cveicu-text-primary);
+                        font-size: 15px;
+                        font-weight: 600;
+                    }
+                    
+                    .theme-option-desc {
+                        color: var(--cveicu-text-secondary);
+                        font-size: 12px;
+                        margin-top: 4px;
+                    }
+                    
+                    /* Status message */
+                    #setup-status {
+                        display: none;
+                        padding: 14px 18px;
+                        border-radius: 10px;
+                        margin-bottom: 20px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        text-align: center;
+                    }
+                    
+                    #setup-status.loading {
+                        display: block;
+                        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                        color: #1565c0;
+                        border: 1px solid #90caf9;
+                    }
+                    
+                    #setup-status.success {
+                        display: block;
+                        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                        color: #2e7d32;
+                        border: 1px solid #a5d6a7;
+                    }
+                    
+                    #setup-status.error {
+                        display: block;
+                        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+                        color: #c62828;
+                        border: 1px solid #ef9a9a;
+                    }
+                    
+                    .status-icon {
+                        margin-right: 6px;
+                    }
+                    
+                    /* Launch button */
+                    #launch-btn {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 10px;
+                        width: 100%;
+                        padding: 18px 32px;
                         font-size: 18px;
                         font-weight: 600;
-                        color: #fff;
-                        background: #d32f2f;
+                        color: #ffffff;
+                        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
                         border: none;
-                        border-radius: 8px;
+                        border-radius: 12px;
                         cursor: pointer;
-                        text-decoration: none;
-                        margin-top: 20px;
-                        transition: background 0.2s ease;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 14px rgba(220, 53, 69, 0.4);
                     }
-                    .btn-complete:hover {
-                        background: #b71c1c;
-                        color: #fff;
-                        text-decoration: none;
+                    
+                    #launch-btn:hover:not(:disabled) {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
                     }
-                    .btn-complete:disabled {
-                        background: #999;
+                    
+                    #launch-btn:active:not(:disabled) {
+                        transform: translateY(0);
+                    }
+                    
+                    #launch-btn:disabled {
+                        opacity: 0.7;
                         cursor: not-allowed;
+                        transform: none;
                     }
-                    .setup-status {
-                        margin-top: 15px;
-                        padding: 10px;
-                        border-radius: 4px;
+                    
+                    .btn-spinner {
                         display: none;
-                    }
-                    .setup-status.loading {
-                        display: block;
-                        background: var(--splunk-semantic-color-info-background, #e3f2fd);
-                        color: var(--splunk-semantic-color-info-text, #1565c0);
-                    }
-                    .setup-status.success {
-                        display: block;
-                        background: var(--splunk-semantic-color-success-background, #e8f5e9);
-                        color: var(--splunk-semantic-color-success-text, #2e7d32);
-                    }
-                    .setup-status.error {
-                        display: block;
-                        background: var(--splunk-semantic-color-error-background, #ffebee);
-                        color: var(--splunk-semantic-color-error-text, #c62828);
+                        width: 20px;
+                        height: 20px;
+                        border: 2px solid rgba(255,255,255,0.3);
+                        border-top-color: #ffffff;
+                        border-radius: 50%;
+                        animation: spin 0.8s linear infinite;
                     }
                     
-                    /* Dark theme overrides when data-theme="dark" or Splunk dark mode */
-                    [data-theme="dark"] .setup-container,
-                    .dark .setup-container,
-                    body.dark .setup-container {
-                        --splunk-semantic-color-background-default: #1a1c21;
-                        --splunk-semantic-color-background-secondary: #252830;
-                        --splunk-semantic-color-text-default: #e0e0e0;
-                        --splunk-semantic-color-text-secondary: #a0a0a0;
-                        --splunk-semantic-color-border-default: #3c3f47;
-                        --splunk-semantic-color-shadow: rgba(0,0,0,0.4);
+                    @keyframes spin {
+                        to { transform: rotate(360deg); }
                     }
                     
-                    /* Radio button label styling for dark mode */
-                    [data-theme="dark"] .info-section label span,
-                    .dark .info-section label span,
-                    body.dark .info-section label span {
-                        color: var(--splunk-semantic-color-text-default, #e0e0e0);
+                    /* Footer */
+                    .setup-footer {
+                        text-align: center;
+                        padding-top: 20px;
+                        border-top: 1px solid var(--cveicu-border);
+                        margin-top: 8px;
+                    }
+                    
+                    .setup-footer p {
+                        color: var(--cveicu-text-muted);
+                        font-size: 13px;
+                        margin: 0;
+                    }
+                    
+                    .setup-footer a {
+                        color: var(--cveicu-accent);
+                        text-decoration: none;
+                    }
+                    
+                    .setup-footer a:hover {
+                        text-decoration: underline;
+                    }
+                    
+                    /* Responsive */
+                    @media (max-width: 600px) {
+                        .setup-container { margin: 16px; }
+                        .setup-header { padding: 30px 24px; }
+                        .setup-content { padding: 24px; }
+                        .feature-grid { grid-template-columns: 1fr; }
+                        .theme-options { flex-direction: column; }
                     }
                 </style>
                 
                 <div class="setup-container">
-                    <div class="setup-header">
-                        <h1>&#x1F691; CVE.ICU Setup</h1>
-                        <p>Your CVE vulnerability intelligence platform is ready!</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>What's Included</h3>
-                        <ul>
-                            <li>311,000+ CVE records from the official CVE Program</li>
-                            <li>Instant-loading dashboard with pre-calculated statistics</li>
-                            <li>CVSS scoring and severity analysis</li>
-                            <li>Vendor and product vulnerability tracking</li>
-                            <li>Hourly delta updates for new CVEs</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>No Configuration Required</h3>
-                        <p>CVE.ICU works out of the box with no API keys or tokens needed. The hourly update process uses anonymous GitHub API access which is sufficient for delta updates.</p>
-                    </div>
-                    
-                    <div class="info-section">
-                        <h3>Dashboard Theme</h3>
-                        <p>Select your preferred dashboard appearance:</p>
-                        <div style="margin-top: 15px;">
-                            <label style="display: inline-flex; align-items: center; margin-right: 30px; cursor: pointer;">
-                                <input type="radio" name="theme" value="light" checked="checked" style="margin-right: 8px;"/>
-                                <span>☀️ Light Mode</span>
-                            </label>
-                            <label style="display: inline-flex; align-items: center; cursor: pointer;">
-                                <input type="radio" name="theme" value="dark" style="margin-right: 8px;"/>
-                                <span>🌙 Dark Mode</span>
-                            </label>
+                    <div class="setup-card">
+                        <!-- Header -->
+                        <div class="setup-header">
+                            <div class="setup-logo">🚨</div>
+                            <h1>CVE.ICU</h1>
+                            <p>Vulnerability Intelligence Platform</p>
+                        </div>
+                        
+                        <!-- Content -->
+                        <div class="setup-content">
+                            <!-- Features -->
+                            <div class="feature-grid">
+                                <div class="feature-item">
+                                    <span class="feature-icon">📊</span>
+                                    <span class="feature-text">311,000+ CVE records from official sources</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-icon">⚡</span>
+                                    <span class="feature-text">Instant-loading pre-calculated stats</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-icon">🎯</span>
+                                    <span class="feature-text">CVSS scoring &amp; severity analysis</span>
+                                </div>
+                                <div class="feature-item">
+                                    <span class="feature-icon">🔄</span>
+                                    <span class="feature-text">Hourly automatic delta updates</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Info -->
+                            <div class="info-section">
+                                <h3>✅ Zero Configuration Required</h3>
+                                <p>CVE.ICU works out of the box. No API keys, no tokens, no complex setup. Just launch and explore vulnerability data instantly.</p>
+                            </div>
+                            
+                            <!-- Theme Selection -->
+                            <div class="theme-section">
+                                <h3>🎨 Choose Your Theme</h3>
+                                <div class="theme-options">
+                                    <label class="theme-option">
+                                        <input type="radio" name="theme" value="light" checked="checked"/>
+                                        <div class="theme-option-label">
+                                            <span class="theme-option-icon">☀️</span>
+                                            <span class="theme-option-name">Light</span>
+                                            <span class="theme-option-desc">Clean &amp; bright</span>
+                                        </div>
+                                    </label>
+                                    <label class="theme-option">
+                                        <input type="radio" name="theme" value="dark"/>
+                                        <div class="theme-option-label">
+                                            <span class="theme-option-icon">🌙</span>
+                                            <span class="theme-option-name">Dark</span>
+                                            <span class="theme-option-desc">Easy on the eyes</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <!-- Status -->
+                            <div id="setup-status"></div>
+                            
+                            <!-- Launch Button -->
+                            <button id="launch-btn" type="button">
+                                <span class="btn-spinner"></span>
+                                <span class="btn-text">Launch Dashboard</span>
+                                <span>→</span>
+                            </button>
+                            
+                            <!-- Footer -->
+                            <div class="setup-footer">
+                                <p>Powered by <a href="https://cve.icu" target="_blank">CVE.ICU</a> • Data from CVE Program</p>
+                            </div>
                         </div>
                     </div>
-                    
-                    <div id="setup-status" class="setup-status"></div>
-                    
-                    <button id="launch-btn" type="button" class="btn-complete">
-                        Launch Dashboard
-                    </button>
                 </div>
             </html>
         </panel>

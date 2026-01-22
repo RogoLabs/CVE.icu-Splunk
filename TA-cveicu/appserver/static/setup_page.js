@@ -1,233 +1,219 @@
 /**
- * TA-cveicu Setup Page Controller
+ * CVE.ICU Setup Page Controller
+ * World-class setup experience with real-time theme preview
  * 
- * Handles the "Launch Dashboard" button click, making an async POST to the
- * setup REST handler to mark the app as configured and trigger a cache reload.
- * 
- * This ensures Splunk's configuration cache is properly invalidated before
- * redirecting to the dashboard, preventing the setup redirect loop.
+ * Theme is stored in localStorage for instant, reliable persistence
+ * across all dashboards without REST API complexity.
  */
 
 require([
     'jquery',
     'splunkjs/mvc',
-    'splunk.util',
     'splunkjs/mvc/simplexml/ready!'
-], function($, mvc, SplunkUtil) {
+], function($, mvc) {
     'use strict';
     
-    // Configuration
+    // ========================================================================
+    // CONFIGURATION
+    // ========================================================================
+    
     var CONFIG = {
         APP_NAME: 'TA-cveicu',
+        STORAGE_KEY: 'cveicu_theme',
         REST_ENDPOINT: '/servicesNS/nobody/TA-cveicu/ta_cveicu/ta_cveicu_settings/github_settings',
         DASHBOARD_URL: '/app/TA-cveicu/cve_dashboard_instant',
-        REDIRECT_DELAY: 500  // ms to wait after successful POST before redirect
+        REDIRECT_DELAY: 600
     };
     
+    // ========================================================================
+    // THEME MANAGEMENT
+    // ========================================================================
+    
     /**
-     * Detect the current Splunk theme and apply it to the setup container
+     * Get saved theme from localStorage
      */
-    function detectAndApplyTheme() {
-        var currentTheme = 'light';
-        
-        // Method 1: Use Splunk.util.getConfigValue (most reliable)
+    function getSavedTheme() {
         try {
-            if (SplunkUtil && typeof SplunkUtil.getConfigValue === 'function') {
-                var configTheme = SplunkUtil.getConfigValue('THEME');
-                if (configTheme) {
-                    currentTheme = configTheme.toLowerCase();
-                }
-            }
+            return localStorage.getItem(CONFIG.STORAGE_KEY) || 'light';
         } catch (e) {
-            console.log('[TA-cveicu] Could not get theme from SplunkUtil:', e);
+            return 'light';
         }
-        
-        // Method 2: Check window.$C (Splunk config object)
-        if (currentTheme === 'light' && window.$C && window.$C.THEME) {
-            currentTheme = window.$C.THEME.toLowerCase();
-        }
-        
-        // Method 3: Check body/html classes
-        if (currentTheme === 'light') {
-            if ($('body').hasClass('dark') || $('html').hasClass('dark')) {
-                currentTheme = 'dark';
-            }
-        }
-        
-        // Method 4: Check prefers-color-scheme media query
-        if (currentTheme === 'light' && window.matchMedia) {
-            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                // Only use this as a hint, don't override Splunk setting
-                console.log('[TA-cveicu] System prefers dark mode');
-            }
-        }
-        
-        // Apply theme to setup container
-        var $container = $('.setup-container');
-        $container.attr('data-theme', currentTheme);
-        
-        // Also set on body for CSS cascade
-        if (currentTheme === 'dark') {
-            $('body').addClass('dark');
-        }
-        
-        // Pre-select the matching radio button
-        $('input[name="theme"][value="' + currentTheme + '"]').prop('checked', true);
-        
-        console.log('[TA-cveicu] Detected Splunk theme:', currentTheme);
-        return currentTheme;
     }
     
     /**
-     * Update theme preview when user changes selection
+     * Save theme to localStorage
      */
-    function setupThemePreview() {
+    function saveTheme(theme) {
+        try {
+            localStorage.setItem(CONFIG.STORAGE_KEY, theme);
+            console.log('[CVE.ICU] Theme saved:', theme);
+            return true;
+        } catch (e) {
+            console.error('[CVE.ICU] Failed to save theme:', e);
+            return false;
+        }
+    }
+    
+    /**
+     * Apply theme to the page immediately
+     */
+    function applyTheme(theme) {
+        var isDark = (theme === 'dark');
+        
+        // Apply to multiple elements for maximum compatibility
+        $('html').toggleClass('dark', isDark);
+        $('body').toggleClass('dark', isDark);
+        $('.dashboard-body').toggleClass('dark', isDark);
+        $('.setup-container').attr('data-theme', theme);
+        
+        // Update Splunk chrome if possible
+        $('.shared-page-chrome').toggleClass('dark', isDark);
+        $('[data-view="views/shared/splunkbar/Master"]').toggleClass('dark', isDark);
+        
+        console.log('[CVE.ICU] Theme applied:', theme);
+    }
+    
+    /**
+     * Setup live theme preview
+     */
+    function setupThemeToggle() {
         $('input[name="theme"]').on('change', function() {
-            var selectedTheme = $(this).val();
-            var $container = $('.setup-container');
-            
-            $container.attr('data-theme', selectedTheme);
-            
-            if (selectedTheme === 'dark') {
-                $('body').addClass('dark');
-            } else {
-                $('body').removeClass('dark');
-            }
-            
-            console.log('[TA-cveicu] Theme preview changed to:', selectedTheme);
+            var theme = $(this).val();
+            applyTheme(theme);
+            // Save immediately so it persists even if they navigate away
+            saveTheme(theme);
         });
     }
     
-    /**
-     * Get the current locale from the URL path
-     */
+    // ========================================================================
+    // URL HELPERS
+    // ========================================================================
+    
     function getLocale() {
         var match = window.location.pathname.match(/^\/([a-z]{2}-[A-Z]{2})\//);
         return match ? match[1] : 'en-US';
     }
     
-    /**
-     * Build the full URL with locale prefix
-     */
     function buildUrl(path) {
-        var locale = getLocale();
-        return '/' + locale + path;
+        return '/' + getLocale() + path;
     }
     
-    /**
-     * Get the Splunk form key for CSRF protection
-     */
     function getFormKey() {
-        // Try multiple sources for the form key
         if (window.$C && window.$C.FORM_KEY) {
             return window.$C.FORM_KEY;
         }
-        // Fallback: try to get from cookie
         var match = document.cookie.match(/splunkweb_csrf_token_\d+=([^;]+)/);
         return match ? match[1] : '';
     }
     
-    /**
-     * Show status message in the UI
-     */
-    function showStatus(type, message) {
+    // ========================================================================
+    // UI HELPERS
+    // ========================================================================
+    
+    function showStatus(type, message, icon) {
         var $status = $('#setup-status');
-        $status.removeClass('loading success error').addClass(type);
-        $status.text(message);
-        $status.show();
+        var iconHtml = icon ? '<span class="status-icon">' + icon + '</span> ' : '';
+        $status
+            .removeClass('loading success error')
+            .addClass(type)
+            .html(iconHtml + message)
+            .fadeIn(200);
     }
     
-    /**
-     * Disable the launch button during processing
-     */
-    function setButtonState(disabled) {
+    function setButtonState(disabled, text) {
         var $btn = $('#launch-btn');
+        var $btnText = $btn.find('.btn-text');
+        var $btnSpinner = $btn.find('.btn-spinner');
+        
         $btn.prop('disabled', disabled);
-        $btn.css('opacity', disabled ? '0.6' : '1');
+        
+        if (disabled) {
+            $btnText.text(text || 'Processing...');
+            $btnSpinner.show();
+        } else {
+            $btnText.text('Launch Dashboard');
+            $btnSpinner.hide();
+        }
     }
     
-    /**
-     * Get the selected theme preference
-     */
-    function getSelectedTheme() {
-        var $checked = $('input[name="theme"]:checked');
-        return $checked.length ? $checked.val() : 'light';
-    }
+    // ========================================================================
+    // SETUP COMPLETION
+    // ========================================================================
     
-    /**
-     * Complete the setup by calling the REST handler and redirecting
-     */
     function completeSetup() {
-        var theme = getSelectedTheme();
+        var theme = $('input[name="theme"]:checked').val() || 'light';
         
-        // Show loading state
-        showStatus('loading', 'Completing setup...');
-        setButtonState(true);
+        // Save theme to localStorage (primary storage)
+        saveTheme(theme);
         
-        // Build the REST endpoint URL
+        // Update UI
+        showStatus('loading', 'Configuring CVE.ICU...', '⚙️');
+        setButtonState(true, 'Setting up...');
+        
+        // Call REST endpoint to mark app as configured
         var restUrl = buildUrl('/splunkd/__raw' + CONFIG.REST_ENDPOINT);
         
-        // Make async POST to the setup handler
         $.ajax({
             url: restUrl,
             type: 'POST',
             data: {
-                github_token: '',  // Empty token - not required
+                github_token: '',
                 theme: theme
             },
             headers: {
                 'X-Splunk-Form-Key': getFormKey(),
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            success: function(response, textStatus, xhr) {
-                // Setup complete - the handler has triggered cache reload
-                showStatus('success', 'Setup complete! Redirecting to dashboard...');
-                
-                // Wait for cache to clear, then redirect
-                setTimeout(function() {
-                    window.location.href = buildUrl(CONFIG.DASHBOARD_URL);
-                }, CONFIG.REDIRECT_DELAY);
-            },
-            error: function(xhr, textStatus, errorThrown) {
-                console.warn('[TA-cveicu] Setup POST returned error:', textStatus, errorThrown);
-                
-                // Even on error, the default/app.conf has is_configured=1
-                // So we can still redirect - it should work
-                showStatus('success', 'Redirecting to dashboard...');
-                
-                setTimeout(function() {
-                    window.location.href = buildUrl(CONFIG.DASHBOARD_URL);
-                }, 300);
+            timeout: 10000
+        })
+        .always(function() {
+            // Always redirect - localStorage theme will work regardless
+            showStatus('success', 'Setup complete! Launching dashboard...', '✅');
+            setButtonState(true, 'Redirecting...');
+            
+            setTimeout(function() {
+                window.location.href = buildUrl(CONFIG.DASHBOARD_URL);
+            }, CONFIG.REDIRECT_DELAY);
+        });
+    }
+    
+    // ========================================================================
+    // INITIALIZATION
+    // ========================================================================
+    
+    function init() {
+        console.log('[CVE.ICU] Initializing setup page...');
+        
+        // Load saved theme and apply it
+        var savedTheme = getSavedTheme();
+        applyTheme(savedTheme);
+        
+        // Pre-select the saved theme radio
+        $('input[name="theme"][value="' + savedTheme + '"]').prop('checked', true);
+        
+        // Setup live theme toggle
+        setupThemeToggle();
+        
+        // Setup launch button
+        $('#launch-btn')
+            .removeAttr('onclick')
+            .on('click', function(e) {
+                e.preventDefault();
+                if (!$(this).prop('disabled')) {
+                    completeSetup();
+                }
+            });
+        
+        // Keyboard shortcut: Enter to launch
+        $(document).on('keypress', function(e) {
+            if (e.which === 13 && !$('#launch-btn').prop('disabled')) {
+                completeSetup();
             }
         });
+        
+        console.log('[CVE.ICU] Setup page ready. Saved theme:', savedTheme);
     }
     
-    /**
-     * Initialize the setup page
-     */
-    function init() {
-        // Detect and apply current Splunk theme
-        detectAndApplyTheme();
-        
-        // Setup theme preview on radio button change
-        setupThemePreview();
-        
-        // Remove inline onclick handler if present
-        var $btn = $('#launch-btn');
-        $btn.removeAttr('onclick');
-        
-        // Attach click handler
-        $btn.on('click', function(e) {
-            e.preventDefault();
-            completeSetup();
-        });
-        
-        // Also expose globally for fallback
-        window.completeSetup = completeSetup;
-        
-        console.log('[TA-cveicu] Setup page controller initialized');
-    }
-    
-    // Initialize when DOM is ready
+    // Start when DOM is ready
     $(document).ready(init);
 });
