@@ -12,6 +12,27 @@ require([
 ], function($, mvc) {
     'use strict';
     
+    // Configuration
+    var CONFIG = {
+        REST_ENDPOINT: '/servicesNS/nobody/TA-cveicu/ta_cveicu/ta_cveicu_settings/github_settings'
+    };
+    
+    /**
+     * Get the current locale from the URL path
+     */
+    function getLocale() {
+        var match = window.location.pathname.match(/^\/([a-z]{2}-[A-Z]{2})\//);
+        return match ? match[1] : 'en-US';
+    }
+    
+    /**
+     * Build the full URL with locale prefix
+     */
+    function buildUrl(path) {
+        var locale = getLocale();
+        return '/' + locale + '/splunkd/__raw' + path;
+    }
+    
     // Function to apply theme
     function applyTheme(theme) {
         var $dashboard = $('.dashboard-body');
@@ -28,13 +49,15 @@ require([
             $('[data-view="views/shared/splunkbar/Master"]').removeClass('dark');
         }
         
-        console.log('CVE.ICU theme applied:', theme);
+        console.log('[TA-cveicu] Theme applied:', theme);
     }
     
     // Function to fetch theme from settings
     function fetchAndApplyTheme() {
+        var url = buildUrl(CONFIG.REST_ENDPOINT) + '?output_mode=json';
+        
         $.ajax({
-            url: '/en-US/splunkd/__raw/servicesNS/nobody/TA-cveicu/TA_cveicu_setup/github_settings?output_mode=json',
+            url: url,
             type: 'GET',
             dataType: 'json',
             success: function(data) {
@@ -44,11 +67,12 @@ require([
                         theme = data.entry[0].content.theme || 'light';
                     }
                 } catch (e) {
-                    console.log('Using default theme');
+                    console.log('[TA-cveicu] Using default theme');
                 }
                 applyTheme(theme);
             },
-            error: function() {
+            error: function(xhr, status, error) {
+                console.warn('[TA-cveicu] Theme fetch failed:', status, error);
                 // On error, use light theme
                 applyTheme('light');
             }
