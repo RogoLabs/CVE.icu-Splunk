@@ -6,88 +6,35 @@
         <panel>
             <html>
                 <style>
-                    /* ================================================================
-                       CVE.ICU Setup Page - World-Class Theme-Aware Design
-                       ================================================================ */
+                    /* CVE.ICU Setup Page - Clean Production Design */
                     
-                    /* CSS Custom Properties for theming */
-                    :root {
-                        --cveicu-bg-primary: #ffffff;
-                        --cveicu-bg-secondary: #f8f9fa;
-                        --cveicu-bg-tertiary: #e9ecef;
-                        --cveicu-text-primary: #212529;
-                        --cveicu-text-secondary: #6c757d;
-                        --cveicu-text-muted: #adb5bd;
-                        --cveicu-border: #dee2e6;
-                        --cveicu-shadow: rgba(0, 0, 0, 0.08);
-                        --cveicu-shadow-lg: rgba(0, 0, 0, 0.12);
-                        --cveicu-accent: #dc3545;
-                        --cveicu-accent-hover: #c82333;
-                        --cveicu-success: #28a745;
-                        --cveicu-info: #17a2b8;
-                    }
-                    
-                    /* Dark theme overrides */
-                    html.dark, body.dark, [data-theme="dark"] {
-                        --cveicu-bg-primary: #1a1d21;
-                        --cveicu-bg-secondary: #22262b;
-                        --cveicu-bg-tertiary: #2a2f35;
-                        --cveicu-text-primary: #f8f9fa;
-                        --cveicu-text-secondary: #adb5bd;
-                        --cveicu-text-muted: #6c757d;
-                        --cveicu-border: #3d4349;
-                        --cveicu-shadow: rgba(0, 0, 0, 0.3);
-                        --cveicu-shadow-lg: rgba(0, 0, 0, 0.5);
-                    }
-                    
-                    /* Hide default Splunk panel styling */
                     .dashboard-panel .panel-body {
                         background: transparent !important;
                         border: none !important;
                     }
                     
-                    /* Main container */
                     .setup-container {
-                        max-width: 680px;
-                        margin: 30px auto;
-                        padding: 0;
+                        max-width: 640px;
+                        margin: 40px auto;
                         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
                     }
                     
-                    /* Card styling */
                     .setup-card {
-                        background: var(--cveicu-bg-primary);
+                        background: #ffffff;
                         border-radius: 16px;
-                        box-shadow: 0 4px 24px var(--cveicu-shadow-lg);
+                        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
                         overflow: hidden;
-                        transition: all 0.3s ease;
                     }
                     
-                    /* Header with gradient */
                     .setup-header {
                         background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
                         padding: 40px 40px 35px;
                         text-align: center;
-                        position: relative;
-                    }
-                    
-                    .setup-header::after {
-                        content: '';
-                        position: absolute;
-                        bottom: 0;
-                        left: 0;
-                        right: 0;
-                        height: 6px;
-                        background: linear-gradient(90deg, 
-                            rgba(255,255,255,0.1) 0%, 
-                            rgba(255,255,255,0.3) 50%, 
-                            rgba(255,255,255,0.1) 100%);
                     }
                     
                     .setup-logo {
                         font-size: 56px;
                         margin-bottom: 12px;
-                        text-shadow: 0 4px 12px rgba(0,0,0,0.2);
                     }
                     
                     .setup-header h1 {
@@ -95,22 +42,18 @@
                         font-size: 32px;
                         font-weight: 700;
                         margin: 0 0 8px 0;
-                        letter-spacing: -0.5px;
                     }
                     
                     .setup-header p {
                         color: rgba(255,255,255,0.9);
                         font-size: 16px;
                         margin: 0;
-                        font-weight: 400;
                     }
                     
-                    /* Content area */
                     .setup-content {
                         padding: 32px 40px 40px;
                     }
                     
-                    /* Feature list */
                     .feature-grid {
                         display: grid;
                         grid-template-columns: repeat(2, 1fr);
@@ -123,15 +66,9 @@
                         align-items: flex-start;
                         gap: 12px;
                         padding: 16px;
-                        background: var(--cveicu-bg-secondary);
+                        background: #f8f9fa;
                         border-radius: 10px;
-                        border: 1px solid var(--cveicu-border);
-                        transition: all 0.2s ease;
-                    }
-                    
-                    .feature-item:hover {
-                        transform: translateY(-2px);
-                        box-shadow: 0 4px 12px var(--cveicu-shadow);
+                        border: 1px solid #e9ecef;
                     }
                     
                     .feature-icon {
@@ -140,116 +77,34 @@
                     }
                     
                     .feature-text {
-                        color: var(--cveicu-text-primary);
+                        color: #212529;
                         font-size: 14px;
                         font-weight: 500;
                         line-height: 1.4;
                     }
                     
-                    /* Info section */
                     .info-section {
-                        background: var(--cveicu-bg-secondary);
-                        border: 1px solid var(--cveicu-border);
+                        background: #f8f9fa;
+                        border: 1px solid #e9ecef;
                         border-radius: 12px;
                         padding: 20px 24px;
-                        margin-bottom: 24px;
+                        margin-bottom: 28px;
                     }
                     
                     .info-section h3 {
-                        color: var(--cveicu-text-primary);
+                        color: #212529;
                         font-size: 16px;
                         font-weight: 600;
                         margin: 0 0 12px 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
                     }
                     
                     .info-section p {
-                        color: var(--cveicu-text-secondary);
+                        color: #6c757d;
                         font-size: 14px;
                         line-height: 1.6;
                         margin: 0;
                     }
                     
-                    /* Theme selector */
-                    .theme-section {
-                        background: var(--cveicu-bg-secondary);
-                        border: 1px solid var(--cveicu-border);
-                        border-radius: 12px;
-                        padding: 24px;
-                        margin-bottom: 28px;
-                    }
-                    
-                    .theme-section h3 {
-                        color: var(--cveicu-text-primary);
-                        font-size: 16px;
-                        font-weight: 600;
-                        margin: 0 0 16px 0;
-                        display: flex;
-                        align-items: center;
-                        gap: 10px;
-                    }
-                    
-                    .theme-options {
-                        display: flex;
-                        gap: 12px;
-                    }
-                    
-                    .theme-option {
-                        flex: 1;
-                        position: relative;
-                    }
-                    
-                    .theme-option input[type="radio"] {
-                        position: absolute;
-                        opacity: 0;
-                        width: 100%;
-                        height: 100%;
-                        cursor: pointer;
-                        z-index: 2;
-                    }
-                    
-                    .theme-option-label {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        padding: 20px 16px;
-                        background: var(--cveicu-bg-tertiary);
-                        border: 2px solid var(--cveicu-border);
-                        border-radius: 10px;
-                        cursor: pointer;
-                        transition: all 0.2s ease;
-                    }
-                    
-                    .theme-option input[type="radio"]:checked + .theme-option-label {
-                        border-color: var(--cveicu-accent);
-                        background: var(--cveicu-bg-primary);
-                        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
-                    }
-                    
-                    .theme-option:hover .theme-option-label {
-                        border-color: var(--cveicu-text-muted);
-                    }
-                    
-                    .theme-option-icon {
-                        font-size: 32px;
-                        margin-bottom: 8px;
-                    }
-                    
-                    .theme-option-name {
-                        color: var(--cveicu-text-primary);
-                        font-size: 15px;
-                        font-weight: 600;
-                    }
-                    
-                    .theme-option-desc {
-                        color: var(--cveicu-text-secondary);
-                        font-size: 12px;
-                        margin-top: 4px;
-                    }
-                    
-                    /* Status message */
                     #setup-status {
                         display: none;
                         padding: 14px 18px;
@@ -262,30 +117,18 @@
                     
                     #setup-status.loading {
                         display: block;
-                        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                        background: #e3f2fd;
                         color: #1565c0;
                         border: 1px solid #90caf9;
                     }
                     
                     #setup-status.success {
                         display: block;
-                        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                        background: #e8f5e9;
                         color: #2e7d32;
                         border: 1px solid #a5d6a7;
                     }
                     
-                    #setup-status.error {
-                        display: block;
-                        background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-                        color: #c62828;
-                        border: 1px solid #ef9a9a;
-                    }
-                    
-                    .status-icon {
-                        margin-right: 6px;
-                    }
-                    
-                    /* Launch button */
                     #launch-btn {
                         display: flex;
                         align-items: center;
@@ -300,17 +143,13 @@
                         border: none;
                         border-radius: 12px;
                         cursor: pointer;
-                        transition: all 0.3s ease;
+                        transition: all 0.2s ease;
                         box-shadow: 0 4px 14px rgba(220, 53, 69, 0.4);
                     }
                     
                     #launch-btn:hover:not(:disabled) {
                         transform: translateY(-2px);
                         box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5);
-                    }
-                    
-                    #launch-btn:active:not(:disabled) {
-                        transform: translateY(0);
                     }
                     
                     #launch-btn:disabled {
@@ -333,51 +172,41 @@
                         to { transform: rotate(360deg); }
                     }
                     
-                    /* Footer */
                     .setup-footer {
                         text-align: center;
                         padding-top: 20px;
-                        border-top: 1px solid var(--cveicu-border);
+                        border-top: 1px solid #e9ecef;
                         margin-top: 8px;
                     }
                     
                     .setup-footer p {
-                        color: var(--cveicu-text-muted);
+                        color: #adb5bd;
                         font-size: 13px;
                         margin: 0;
                     }
                     
                     .setup-footer a {
-                        color: var(--cveicu-accent);
+                        color: #dc3545;
                         text-decoration: none;
                     }
                     
-                    .setup-footer a:hover {
-                        text-decoration: underline;
-                    }
-                    
-                    /* Responsive */
                     @media (max-width: 600px) {
                         .setup-container { margin: 16px; }
                         .setup-header { padding: 30px 24px; }
                         .setup-content { padding: 24px; }
                         .feature-grid { grid-template-columns: 1fr; }
-                        .theme-options { flex-direction: column; }
                     }
                 </style>
                 
                 <div class="setup-container">
                     <div class="setup-card">
-                        <!-- Header -->
                         <div class="setup-header">
                             <div class="setup-logo">🚨</div>
                             <h1>CVE.ICU</h1>
                             <p>Vulnerability Intelligence Platform</p>
                         </div>
                         
-                        <!-- Content -->
                         <div class="setup-content">
-                            <!-- Features -->
                             <div class="feature-grid">
                                 <div class="feature-item">
                                     <span class="feature-icon">📊</span>
@@ -397,46 +226,19 @@
                                 </div>
                             </div>
                             
-                            <!-- Info -->
                             <div class="info-section">
                                 <h3>✅ Zero Configuration Required</h3>
                                 <p>CVE.ICU works out of the box. No API keys, no tokens, no complex setup. Just launch and explore vulnerability data instantly.</p>
                             </div>
                             
-                            <!-- Theme Selection -->
-                            <div class="theme-section">
-                                <h3>🎨 Choose Your Theme</h3>
-                                <div class="theme-options">
-                                    <label class="theme-option">
-                                        <input type="radio" name="theme" value="light" checked="checked"/>
-                                        <div class="theme-option-label">
-                                            <span class="theme-option-icon">☀️</span>
-                                            <span class="theme-option-name">Light</span>
-                                            <span class="theme-option-desc">Clean &amp; bright</span>
-                                        </div>
-                                    </label>
-                                    <label class="theme-option">
-                                        <input type="radio" name="theme" value="dark"/>
-                                        <div class="theme-option-label">
-                                            <span class="theme-option-icon">🌙</span>
-                                            <span class="theme-option-name">Dark</span>
-                                            <span class="theme-option-desc">Easy on the eyes</span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <!-- Status -->
                             <div id="setup-status"></div>
                             
-                            <!-- Launch Button -->
                             <button id="launch-btn" type="button">
                                 <span class="btn-spinner"></span>
                                 <span class="btn-text">Launch Dashboard</span>
                                 <span>→</span>
                             </button>
                             
-                            <!-- Footer -->
                             <div class="setup-footer">
                                 <p>Powered by <a href="https://cve.icu" target="_blank">CVE.ICU</a> • Data from CVE Program</p>
                             </div>
