@@ -260,7 +260,7 @@
             ],
             "constraints": [
                 {
-                    "search": "index=main sourcetype=\"ta:cvelist:v5:record\" cve_state=PUBLISHED",
+                    "search": "index=main sourcetype=\"cveicu:record\" cve_state=PUBLISHED",
                     "owner": "CVE_Records"
                 }
             ],

@@ -101,13 +101,14 @@ Interactive table with:
 | `cve_id` | CVE identifier (e.g., CVE-2024-1234) |
 | `state` | CVE state (PUBLISHED, REJECTED, etc.) |
 | `description` | Vulnerability description |
-| `cvss_score` | Highest CVSS score across all versions |
-| `cvss_severity` | Severity rating (CRITICAL, HIGH, MEDIUM, LOW) |
-| `cvss_version` | CVSS version used for scoring |
-| `affected_vendors` | Multi-value list of affected vendors |
-| `affected_products` | Multi-value list of affected products |
-| `cwe_ids` | Multi-value list of CWE identifiers |
-| `references` | URLs to advisories and references |
+| `cvss_score` | Computed highest CVSS score across all versions |
+| `cvss_severity` | Computed severity rating (CRITICAL, HIGH, MEDIUM, LOW) |
+| `cvss_v40_score` | CVSS v4.0 base score |
+| `cvss_v31_score` | CVSS v3.1 base score |
+| `affected_vendor` | Multi-value list of affected vendors |
+| `affected_product` | Multi-value list of affected products |
+| `cwe_id` | Multi-value list of CWE identifiers |
+| `reference_url` | URLs to advisories and references |
 | `date_published` | Original publication date |
 | `date_updated` | Last modification date |
 
@@ -117,21 +118,21 @@ Interactive table with:
 ```spl
 index=main sourcetype="cveicu:record" cvss_severity=CRITICAL
 | where date_published > relative_time(now(), "-7d")
-| table cve_id description cvss_score affected_vendors
+| table cve_id description cvss_score affected_vendor
 ```
 
 ### Top 10 Most Vulnerable Vendors
 ```spl
 index=main sourcetype="cveicu:record"
-| mvexpand affected_vendors
-| stats count by affected_vendors
+| mvexpand affected_vendor
+| stats count by affected_vendor
 | sort - count
 | head 10
 ```
 
 ### CVEs Affecting a Specific Product
 ```spl
-index=main sourcetype="cveicu:record" affected_products="*apache*"
+index=main sourcetype="cveicu:record" affected_product="*apache*"
 | table cve_id cvss_score cvss_severity description date_published
 | sort - cvss_score
 ```
@@ -190,7 +191,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 

@@ -181,7 +181,7 @@
             </input>
             <table>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record" cve_id="$cve_search$*"
+                    <query>index=main sourcetype="cveicu:record" cve_id="$cve_search$*"
 | head 50
 | table cve_id, cve_state, date_published, cvss_severity, vendor, assigner</query>
                     <earliest>0</earliest>

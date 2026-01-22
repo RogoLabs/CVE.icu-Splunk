@@ -54,7 +54,7 @@
             <single>
                 <title>⚡ Active Exploitation (SSVC)</title>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | where cve_state="PUBLISHED" AND ssvc_exploitation="active"
@@ -90,7 +90,7 @@
             <single>
                 <title>🛡️ CISA Vulnrichment</title>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | where cve_state="PUBLISHED"
 | search _raw="*CISA*"
@@ -113,7 +113,7 @@
             <title>🔥 Patching Priority Queue (CVSS × EPSS × KEV)</title>
             <table>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;[^\"]+)\""
@@ -173,7 +173,7 @@
             <title>📊 SSVC Decision Distribution</title>
             <chart>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
 | rex field=_raw "\"Automatable\"\s*:\s*\"(?&lt;ssvc_automatable&gt;[^\"]+)\""
@@ -197,7 +197,7 @@
             <title>🎯 SSVC Exploitation Status</title>
             <chart>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"Exploitation\"\s*:\s*\"(?&lt;ssvc_exploitation&gt;[^\"]+)\""
 | where cve_state="PUBLISHED" AND isnotnull(ssvc_exploitation)
@@ -214,7 +214,7 @@
             <title>🔧 SSVC Automatable</title>
             <chart>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"Automatable\"\s*:\s*\"(?&lt;ssvc_automatable&gt;[^\"]+)\""
 | where cve_state="PUBLISHED" AND isnotnull(ssvc_automatable)
@@ -235,7 +235,7 @@
             <title>🏢 Vendor Vulnerability Comparison (Monthly Trend)</title>
             <chart>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2})"
@@ -270,7 +270,7 @@
             <title>🔴 Critical/High CVEs by Vendor</title>
             <chart>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"baseSeverity\"\s*:\s*\"(?&lt;severity&gt;[^\"]+)\""
@@ -353,7 +353,7 @@
             <title>📊 Ingestion Statistics (Last 24h)</title>
             <table>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;[^\"]+)\""
 | stats count as total_events earliest(_time) as first_event latest(_time) as last_event by cve_state
 | eval first_event=strftime(first_event, "%Y-%m-%d %H:%M")

@@ -153,7 +153,7 @@
             <chart>
                 <title>Top 10 Weakness Types (CWE)</title>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"cweId\"\s*:\s*\"(?&lt;cwe_id&gt;CWE-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;\d{4}-\d{2}-\d{2})"
@@ -179,7 +179,7 @@
             <table>
                 <title>Recent CVEs</title>
                 <search>
-                    <query>index=main sourcetype="ta:cvelist:v5:record"
+                    <query>index=main sourcetype="cveicu:record"
 | rex field=_raw "\"cveId\"\s*:\s*\"(?&lt;cve_id&gt;CVE-\d{4}-\d+)\""
 | rex field=_raw "\"state\"\s*:\s*\"(?&lt;cve_state&gt;PUBLISHED)\""
 | rex field=_raw "\"datePublished\"\s*:\s*\"(?&lt;date_published&gt;[^\"]+)\""
