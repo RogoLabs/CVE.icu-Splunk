@@ -11,8 +11,9 @@
 require([
     'jquery',
     'splunkjs/mvc',
+    'splunk.util',
     'splunkjs/mvc/simplexml/ready!'
-], function($, mvc) {
+], function($, mvc, SplunkUtil) {
     'use strict';
     
     // Configuration
@@ -22,6 +23,80 @@ require([
         DASHBOARD_URL: '/app/TA-cveicu/cve_dashboard_instant',
         REDIRECT_DELAY: 500  // ms to wait after successful POST before redirect
     };
+    
+    /**
+     * Detect the current Splunk theme and apply it to the setup container
+     */
+    function detectAndApplyTheme() {
+        var currentTheme = 'light';
+        
+        // Method 1: Use Splunk.util.getConfigValue (most reliable)
+        try {
+            if (SplunkUtil && typeof SplunkUtil.getConfigValue === 'function') {
+                var configTheme = SplunkUtil.getConfigValue('THEME');
+                if (configTheme) {
+                    currentTheme = configTheme.toLowerCase();
+                }
+            }
+        } catch (e) {
+            console.log('[TA-cveicu] Could not get theme from SplunkUtil:', e);
+        }
+        
+        // Method 2: Check window.$C (Splunk config object)
+        if (currentTheme === 'light' && window.$C && window.$C.THEME) {
+            currentTheme = window.$C.THEME.toLowerCase();
+        }
+        
+        // Method 3: Check body/html classes
+        if (currentTheme === 'light') {
+            if ($('body').hasClass('dark') || $('html').hasClass('dark')) {
+                currentTheme = 'dark';
+            }
+        }
+        
+        // Method 4: Check prefers-color-scheme media query
+        if (currentTheme === 'light' && window.matchMedia) {
+            if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                // Only use this as a hint, don't override Splunk setting
+                console.log('[TA-cveicu] System prefers dark mode');
+            }
+        }
+        
+        // Apply theme to setup container
+        var $container = $('.setup-container');
+        $container.attr('data-theme', currentTheme);
+        
+        // Also set on body for CSS cascade
+        if (currentTheme === 'dark') {
+            $('body').addClass('dark');
+        }
+        
+        // Pre-select the matching radio button
+        $('input[name="theme"][value="' + currentTheme + '"]').prop('checked', true);
+        
+        console.log('[TA-cveicu] Detected Splunk theme:', currentTheme);
+        return currentTheme;
+    }
+    
+    /**
+     * Update theme preview when user changes selection
+     */
+    function setupThemePreview() {
+        $('input[name="theme"]').on('change', function() {
+            var selectedTheme = $(this).val();
+            var $container = $('.setup-container');
+            
+            $container.attr('data-theme', selectedTheme);
+            
+            if (selectedTheme === 'dark') {
+                $('body').addClass('dark');
+            } else {
+                $('body').removeClass('dark');
+            }
+            
+            console.log('[TA-cveicu] Theme preview changed to:', selectedTheme);
+        });
+    }
     
     /**
      * Get the current locale from the URL path
@@ -131,6 +206,12 @@ require([
      * Initialize the setup page
      */
     function init() {
+        // Detect and apply current Splunk theme
+        detectAndApplyTheme();
+        
+        // Setup theme preview on radio button change
+        setupThemePreview();
+        
         // Remove inline onclick handler if present
         var $btn = $('#launch-btn');
         $btn.removeAttr('onclick');

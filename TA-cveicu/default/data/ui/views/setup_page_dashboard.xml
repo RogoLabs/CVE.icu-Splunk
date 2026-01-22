@@ -6,14 +6,17 @@
         <panel>
             <html>
                 <style>
+                    /* Theme-aware setup page using CSS custom properties */
                     .setup-container {
                         max-width: 700px;
                         margin: 40px auto;
                         padding: 40px;
-                        background: #fff;
+                        background: var(--splunk-semantic-color-background-default, #fff);
                         border-radius: 12px;
-                        box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+                        box-shadow: 0 2px 15px var(--splunk-semantic-color-shadow, rgba(0,0,0,0.1));
                         text-align: center;
+                        color: var(--splunk-semantic-color-text-default, #333);
+                        transition: background 0.3s ease, color 0.3s ease;
                     }
                     .setup-header h1 {
                         color: #d32f2f;
@@ -21,30 +24,31 @@
                         margin-bottom: 10px;
                     }
                     .setup-header p {
-                        color: #666;
+                        color: var(--splunk-semantic-color-text-secondary, #666);
                         font-size: 16px;
                         margin-bottom: 30px;
                     }
                     .info-section {
-                        background: #f5f5f5;
+                        background: var(--splunk-semantic-color-background-secondary, #f5f5f5);
                         padding: 20px;
                         border-radius: 8px;
                         margin: 20px 0;
                         text-align: left;
+                        border: 1px solid var(--splunk-semantic-color-border-default, transparent);
                     }
                     .info-section h3 {
                         margin: 0 0 10px 0;
-                        color: #333;
+                        color: var(--splunk-semantic-color-text-default, #333);
                     }
                     .info-section p {
                         margin: 0;
-                        color: #666;
+                        color: var(--splunk-semantic-color-text-secondary, #666);
                         font-size: 14px;
                     }
                     .info-section ul {
                         margin: 10px 0 0 0;
                         padding-left: 20px;
-                        color: #666;
+                        color: var(--splunk-semantic-color-text-secondary, #666);
                     }
                     .btn-complete {
                         display: inline-block;
@@ -77,18 +81,37 @@
                     }
                     .setup-status.loading {
                         display: block;
-                        background: #e3f2fd;
-                        color: #1565c0;
+                        background: var(--splunk-semantic-color-info-background, #e3f2fd);
+                        color: var(--splunk-semantic-color-info-text, #1565c0);
                     }
                     .setup-status.success {
                         display: block;
-                        background: #e8f5e9;
-                        color: #2e7d32;
+                        background: var(--splunk-semantic-color-success-background, #e8f5e9);
+                        color: var(--splunk-semantic-color-success-text, #2e7d32);
                     }
                     .setup-status.error {
                         display: block;
-                        background: #ffebee;
-                        color: #c62828;
+                        background: var(--splunk-semantic-color-error-background, #ffebee);
+                        color: var(--splunk-semantic-color-error-text, #c62828);
+                    }
+                    
+                    /* Dark theme overrides when data-theme="dark" or Splunk dark mode */
+                    [data-theme="dark"] .setup-container,
+                    .dark .setup-container,
+                    body.dark .setup-container {
+                        --splunk-semantic-color-background-default: #1a1c21;
+                        --splunk-semantic-color-background-secondary: #252830;
+                        --splunk-semantic-color-text-default: #e0e0e0;
+                        --splunk-semantic-color-text-secondary: #a0a0a0;
+                        --splunk-semantic-color-border-default: #3c3f47;
+                        --splunk-semantic-color-shadow: rgba(0,0,0,0.4);
+                    }
+                    
+                    /* Radio button label styling for dark mode */
+                    [data-theme="dark"] .info-section label span,
+                    .dark .info-section label span,
+                    body.dark .info-section label span {
+                        color: var(--splunk-semantic-color-text-default, #e0e0e0);
                     }
                 </style>
                 
