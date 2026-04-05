@@ -1,0 +1,44 @@
+{
+  "title": "CISA Known Exploited Vulnerabilities Catalog",
+  "catalogVersion": "2024.03.01",
+  "dateReleased": "2024-03-01T00:00:00.000Z",
+  "count": 3,
+  "vulnerabilities": [
+    {
+      "cveID": "CVE-2024-12345",
+      "vendorProject": "Microsoft",
+      "product": "Widget Service",
+      "vulnerabilityName": "Microsoft Widget Service RCE",
+      "dateAdded": "2024-02-25",
+      "shortDescription": "Remote code execution in Widget Service.",
+      "requiredAction": "Apply updates per vendor instructions.",
+      "dueDate": "2024-03-17",
+      "knownRansomwareCampaignUse": "Known",
+      "notes": ""
+    },
+    {
+      "cveID": "CVE-2023-44487",
+      "vendorProject": "IETF",
+      "product": "HTTP/2",
+      "vulnerabilityName": "HTTP/2 Rapid Reset Attack",
+      "dateAdded": "2023-10-10",
+      "shortDescription": "HTTP/2 protocol allows rapid stream reset.",
+      "requiredAction": "Apply mitigations per vendor instructions.",
+      "dueDate": "2023-10-31",
+      "knownRansomwareCampaignUse": "Unknown",
+      "notes": ""
+    },
+    {
+      "cveID": "CVE-2021-44228",
+      "vendorProject": "Apache",
+      "product": "Log4j",
+      "vulnerabilityName": "Apache Log4j2 Remote Code Execution",
+      "dateAdded": "2021-12-10",
+      "shortDescription": "Apache Log4j2 JNDI features used in configuration.",
+      "requiredAction": "Apply updates per vendor instructions.",
+      "dueDate": "2021-12-24",
+      "knownRansomwareCampaignUse": "Known",
+      "notes": ""
+    }
+  ]
+}
