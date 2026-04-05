@@ -10,7 +10,7 @@ Powered by [cve.icu](https://cve.icu) - Fast, searchable CVE lookup service.
 
 ## Overview
 
-This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from the 
+This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from the
 [CVEProject/cvelistV5](https://github.com/CVEProject/cvelistV5) GitHub repository into Splunk.
 
 ### Key Features
@@ -20,6 +20,9 @@ This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from t
 - **Full CVE V5 Schema Support**: Extracts cveMetadata, CNA containers, and ADP enrichment
 - **CVSS Score Extraction**: Parses CVSS v2.0, v3.0, v3.1, and v4.0 scores
 - **CISA-ADP Integration**: Includes CISA Authorized Data Publisher enrichment
+- **EPSS Enrichment**: Daily FIRST EPSS scores via scheduled lookup refresh
+- **CISA KEV Enrichment**: Known Exploited Vulnerabilities catalog updated every 6 hours
+- **Risk Priority Scoring**: Pre-computed risk scores combining CVSS, EPSS, KEV, and SSVC data
 - **Secure Credential Storage**: GitHub token stored via Splunk's encrypted storage
 - **Cloud Compatible**: Meets Splunk Cloud and AppInspect vetting requirements
 
@@ -80,15 +83,16 @@ interval = 3600
 
 ## Sourcetypes
 
-| Sourcetype | Description |
-|------------|-------------|
+| Sourcetype      | Description                              |
+| --------------- | ---------------------------------------- |
 | `cveicu:record` | CVE vulnerability records (primary data) |
-| `cveicu:error` | Error events during processing |
-| `cveicu:audit` | Audit and operational events |
+| `cveicu:error`  | Error events during processing           |
+| `cveicu:audit`  | Audit and operational events             |
 
 ## Extracted Fields
 
 ### Core CVE Fields
+
 - `cve_id` - CVE identifier (e.g., CVE-2024-1234)
 - `state` - Record state (PUBLISHED, REJECTED)
 - `date_published` - Initial publication date
@@ -98,17 +102,20 @@ interval = 3600
 - `description` - Vulnerability description
 
 ### Affected Products (Multi-value)
+
 - `affected_vendor` - Affected vendor names
 - `affected_product` - Affected product names
 - `cwe_id` - Associated CWE identifiers
 
 ### CVSS Scores
+
 - `cvss_v40_score`, `cvss_v40_severity`, `cvss_v40_vector`
 - `cvss_v31_score`, `cvss_v31_severity`, `cvss_v31_vector`
 - `cvss_v30_score`, `cvss_v30_severity`, `cvss_v30_vector`
 - `cvss_v20_score`, `cvss_v20_vector`
 
 ### ADP Enrichment
+
 - `has_cisa_adp` - Boolean: CISA-ADP data present
 - `has_cve_program_container` - Boolean: CVE Program Container present
 - `cisa_ssvc` - CISA SSVC decision tree data (JSON)
@@ -116,14 +123,16 @@ interval = 3600
 ## Example Searches
 
 ### High Severity CVEs (Last 7 Days)
+
 ```spl
-index=cve_data sourcetype="cveicu:record" 
+index=cve_data sourcetype="cveicu:record"
 | where cvss_v31_score >= 9.0 OR cvss_v40_score >= 9.0
 | eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, "Unknown")
 | table cve_id, title, severity, affected_vendor, affected_product
 ```
 
 ### CVEs by Vendor
+
 ```spl
 index=cve_data sourcetype="cveicu:record"
 | mvexpand affected_vendor
@@ -133,6 +142,7 @@ index=cve_data sourcetype="cveicu:record"
 ```
 
 ### CVEs with CISA-ADP Enrichment
+
 ```spl
 index=cve_data sourcetype="cveicu:record" has_cisa_adp=true
 | spath input=cisa_ssvc
@@ -140,6 +150,7 @@ index=cve_data sourcetype="cveicu:record" has_cisa_adp=true
 ```
 
 ### New CVEs by Day
+
 ```spl
 index=cve_data sourcetype="cveicu:record"
 | timechart span=1d count
@@ -148,34 +159,49 @@ index=cve_data sourcetype="cveicu:record"
 ## Troubleshooting
 
 ### Check Input Status
+
 ```spl
 index=_internal sourcetype=splunkd component=ModularInputs "cveicu"
 ```
 
 ### Check Add-on Logs
+
 ```spl
 index=_internal source="*TA-cveicu.log*"
 ```
 
 ### Verify Checkpoint
+
 ```spl
 | inputlookup ta_cveicu_checkpoints
 ```
 
 ### Common Issues
 
-| Issue | Solution |
-|-------|----------|
-| Rate limit errors | Configure GitHub Personal Access Token |
-| No events ingested | Check network connectivity to api.github.com |
+| Issue                   | Solution                                            |
+| ----------------------- | --------------------------------------------------- |
+| Rate limit errors       | Configure GitHub Personal Access Token              |
+| No events ingested      | Check network connectivity to api.github.com        |
 | Incomplete initial load | Allow sufficient time; baseline contains 200K+ CVEs |
-| Memory errors | Reduce batch_size parameter |
+| Memory errors           | Reduce batch_size parameter                         |
 
 ## Data Volume Estimates
 
 - **Initial Load**: ~200,000+ CVE records (~2-3 GB indexed)
 - **Daily Updates**: ~50-200 new/updated CVEs (~10-50 MB/day)
 - **Hourly Deltas**: ~5-20 CVEs per delta release
+
+## EPSS/KEV Enrichment
+
+Scheduled saved searches automatically refresh enrichment lookups:
+
+| Saved Search          | Schedule      | Source                | Lookup                   |
+| --------------------- | ------------- | --------------------- | ------------------------ |
+| EPSS Lookup Refresh   | Daily at 6 AM | FIRST EPSS API        | epss_lookup.csv          |
+| KEV Lookup Refresh    | Every 6 hours | CISA KEV catalog      | kev_lookup.csv           |
+| Risk Priority Refresh | Every 30 min  | Computed from lookups | risk_priority_lookup.csv |
+
+These lookups are joined at search time via `transforms.conf` to enrich CVE data with exploit probability scores, known exploitation status, and computed risk priority.
 
 ## Architecture
 
@@ -195,20 +221,24 @@ TA-cveicu Modular Input
     └── Write events to Splunk
     │
     ▼
-Splunk Index
-    └── sourcetype=cveicu:record
+Splunk Index                          Enrichment Lookups
+    └── sourcetype=cveicu:record          ├── FIRST EPSS → epss_lookup.csv
+                                          ├── CISA KEV  → kev_lookup.csv
+                                          └── Combined  → risk_priority_lookup.csv
 ```
 
 ## Support
 
-- **Issues**: [GitHub Issue Tracker](https://github.com/your-repo/TA-cveicu/issues)
-- **Documentation**: See `plan.md` for detailed technical design
+- **Issues**: [GitHub Issue Tracker](https://github.com/RogoLabs/CVE.icu-Splunk/issues)
+- **Website**: [cve.icu](https://cve.icu)
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | 2024 | Initial release |
+| Version | Date       | Changes                                            |
+| ------- | ---------- | -------------------------------------------------- |
+| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud        |
+| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement |
+| 1.0.0   | 2026-01-22 | Initial release                                    |
 
 ## License
 
