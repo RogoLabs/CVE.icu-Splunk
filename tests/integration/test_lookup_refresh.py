@@ -9,10 +9,10 @@ class TestKEVLookupRefresh:
         """Trigger KEV Lookup Refresh and verify kev_lookup.csv is populated.
 
         This is the exact scenario that was broken on Splunk Cloud (issue #2).
-        The saved search runs: | cveicu_epss_kev mode=kev | outputlookup kev_lookup.csv
+        The saved search runs: | cveicuepsskev mode=kev | outputlookup kev_lookup.csv
         """
         result = splunk_api.run_search_async(
-            "| cveicu_epss_kev mode=kev | outputlookup kev_lookup.csv"
+            "| cveicuepsskev mode=kev | outputlookup kev_lookup.csv"
         )
 
         lookup_result = splunk_api.run_search(
@@ -43,7 +43,7 @@ class TestEPSSLookupRefresh:
     def test_epss_saved_search_populates_lookup(self, splunk_api):
         """Trigger EPSS Lookup Refresh and verify epss_lookup.csv is populated."""
         result = splunk_api.run_search_async(
-            "| cveicu_epss_kev mode=epss | outputlookup epss_lookup.csv"
+            "| cveicuepsskev mode=epss | outputlookup epss_lookup.csv"
         )
 
         lookup_result = splunk_api.run_search(

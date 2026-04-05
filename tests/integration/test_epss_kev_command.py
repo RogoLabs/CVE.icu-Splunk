@@ -7,9 +7,9 @@ class TestCommandExecution:
     """Tests that run without --live (command structure only)."""
 
     def test_command_is_registered(self, splunk_api):
-        """Verify the cveicu_epss_kev command is recognized by Splunk."""
+        """Verify the cveicuepsskev command is recognized by Splunk."""
         result = splunk_api.get(
-            "/servicesNS/-/TA-cveicu/configs/conf-commands/cveicu_epss_kev",
+            "/servicesNS/-/TA-cveicu/configs/conf-commands/cveicuepsskev",
             params={"output_mode": "json"},
         )
         assert result.status_code == 200
@@ -21,7 +21,7 @@ class TestCommandExecution:
         that the command itself doesn't error. It may return 0 rows.
         """
         result = splunk_api.run_search(
-            "| cveicu_epss_kev mode=kev | head 1 | stats count"
+            "| cveicuepsskev mode=kev | head 1 | stats count"
         )
         assert "results" in result
 
@@ -29,14 +29,14 @@ class TestCommandExecution:
 @pytest.mark.live
 class TestCommandWithLiveData:
     def test_kev_command_returns_data(self, splunk_api):
-        result = splunk_api.run_search_async("| cveicu_epss_kev mode=kev | head 5")
+        result = splunk_api.run_search_async("| cveicuepsskev mode=kev | head 5")
         results = result.get("results", [])
         assert len(results) == 5
         assert results[0]["cve_id"].startswith("CVE-")
         assert results[0]["in_kev"] == "true"
 
     def test_epss_command_returns_data(self, splunk_api):
-        result = splunk_api.run_search_async("| cveicu_epss_kev mode=epss | head 5")
+        result = splunk_api.run_search_async("| cveicuepsskev mode=epss | head 5")
         results = result.get("results", [])
         assert len(results) == 5
         assert results[0]["cve_id"].startswith("CVE-")

@@ -4,8 +4,8 @@ CVE.ICU EPSS/KEV Custom Search Command Wrapper
 
 This command is called by Splunk saved searches to refresh EPSS and KEV lookups.
 Usage in SPL:
-  | script cveicu_epss_kev epss
-  | script cveicu_epss_kev kev
+  | cveicuepsskev mode=epss | outputlookup epss_lookup.csv
+  | cveicuepsskev mode=kev | outputlookup kev_lookup.csv
 
 Author: CVE.ICU Team
 """
@@ -14,14 +14,14 @@ import os
 import sys
 
 # Add lib directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "cveicu_lib"))
 
 from splunklib.searchcommands import dispatch, GeneratingCommand, Configuration, Option
 
 
 @Configuration()
-class EPSSKEVCommand(GeneratingCommand):
+class CveicuepsskevCommand(GeneratingCommand):
     """Fetches EPSS scores or KEV catalog and yields rows for | outputlookup"""
 
     mode = Option(require=False, default="all")
@@ -99,10 +99,10 @@ class EPSSKEVCommand(GeneratingCommand):
 if __name__ == "__main__":
     # For command-line testing
     if len(sys.argv) > 1 and sys.argv[1] in ("epss", "kev", "all"):
-        cmd = EPSSKEVCommand()
+        cmd = CveicuepsskevCommand()
         cmd.mode = sys.argv[1]
         for result in cmd.generate():
             print(result)
     else:
         # Normal Splunk dispatch
-        dispatch(EPSSKEVCommand, sys.argv, sys.stdin, sys.stdout, __name__)
+        dispatch(CveicuepsskevCommand, sys.argv, sys.stdin, sys.stdout, __name__)

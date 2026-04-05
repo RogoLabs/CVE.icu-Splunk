@@ -5,12 +5,12 @@ import io
 import json
 import pytest
 from unittest.mock import patch, MagicMock
-from cveicu_epss_kev_command import EPSSKEVCommand
+from cveicu_epss_kev_command import CveicuepsskevCommand
 
 
 @pytest.fixture
 def command():
-    cmd = EPSSKEVCommand.__new__(EPSSKEVCommand)
+    cmd = CveicuepsskevCommand.__new__(CveicuepsskevCommand)
     cmd.mode = "all"
     return cmd
 
@@ -113,7 +113,7 @@ class TestGenerate:
 @pytest.mark.live
 class TestLiveFetch:
     def test_live_kev_fetch(self):
-        cmd = EPSSKEVCommand.__new__(EPSSKEVCommand)
+        cmd = CveicuepsskevCommand.__new__(CveicuepsskevCommand)
         cmd.mode = "kev"
         rows = list(cmd._fetch_kev())
         assert len(rows) > 100
@@ -121,7 +121,7 @@ class TestLiveFetch:
         assert rows[0]["in_kev"] == "true"
 
     def test_live_epss_fetch(self):
-        cmd = EPSSKEVCommand.__new__(EPSSKEVCommand)
+        cmd = CveicuepsskevCommand.__new__(CveicuepsskevCommand)
         cmd.mode = "epss"
         rows = list(cmd._fetch_epss())
         assert len(rows) > 1000
