@@ -1,0 +1,140 @@
+[
+  {
+    "dataType": "CVE_RECORD",
+    "dataVersion": "5.1",
+    "cveMetadata": {
+      "cveId": "CVE-2024-12345",
+      "assignerOrgId": "f0158376-9dc2-43b6-827c-5f631a4d8d09",
+      "assignerShortName": "microsoft",
+      "state": "PUBLISHED",
+      "dateReserved": "2024-01-15T00:00:00.000Z",
+      "datePublished": "2024-02-20T18:00:00.000Z",
+      "dateUpdated": "2024-03-01T12:00:00.000Z"
+    },
+    "containers": {
+      "cna": {
+        "title": "Remote Code Execution in Widget Service",
+        "providerMetadata": {
+          "orgId": "f0158376-9dc2-43b6-827c-5f631a4d8d09",
+          "shortName": "microsoft"
+        },
+        "descriptions": [
+          {
+            "lang": "en",
+            "value": "A remote code execution vulnerability exists in Widget Service."
+          }
+        ],
+        "affected": [
+          {
+            "vendor": "Microsoft",
+            "product": "Widget Service",
+            "versions": [
+              {
+                "version": "1.0",
+                "status": "affected",
+                "lessThan": "1.5.2",
+                "versionType": "semver"
+              }
+            ]
+          }
+        ],
+        "problemTypes": [
+          {
+            "descriptions": [
+              {
+                "lang": "en",
+                "cweId": "CWE-79",
+                "description": "Cross-site Scripting",
+                "type": "CWE"
+              }
+            ]
+          }
+        ],
+        "references": [
+          {
+            "url": "https://example.com/advisory/2024-001",
+            "name": "Advisory"
+          }
+        ],
+        "metrics": [
+          {
+            "cvssV3_1": {
+              "version": "3.1",
+              "baseScore": 8.8,
+              "baseSeverity": "HIGH",
+              "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H"
+            }
+          }
+        ]
+      },
+      "adp": [
+        {
+          "title": "CISA ADP Vulnrichment",
+          "providerMetadata": {
+            "orgId": "134c704f-9b21-4f2e-91b3-4a467353bcc0",
+            "shortName": "CISA-ADP"
+          },
+          "metrics": [
+            {
+              "other": {
+                "type": "ssvc",
+                "content": {
+                  "Exploitation": "active",
+                  "Automatable": "yes",
+                  "Technical Impact": "total"
+                }
+              }
+            }
+          ],
+          "tags": ["kev"]
+        }
+      ]
+    }
+  },
+  {
+    "dataType": "CVE_RECORD",
+    "dataVersion": "5.1",
+    "cveMetadata": {
+      "cveId": "CVE-2024-99999",
+      "assignerOrgId": "abc12345-1234-1234-1234-abcdef123456",
+      "assignerShortName": "linux",
+      "state": "REJECTED",
+      "dateReserved": "2024-05-01T00:00:00.000Z",
+      "datePublished": "2024-05-10T00:00:00.000Z",
+      "dateUpdated": "2024-06-01T00:00:00.000Z"
+    },
+    "containers": {
+      "cna": {
+        "rejectedReasons": [
+          {
+            "lang": "en",
+            "value": "Duplicate of CVE-2024-12345"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "dataType": "CVE_RECORD",
+    "dataVersion": "5.1",
+    "cveMetadata": {
+      "cveId": "CVE-2024-00001",
+      "assignerOrgId": "def67890-5678-5678-5678-def678901234",
+      "assignerShortName": "google",
+      "state": "PUBLISHED",
+      "datePublished": "2024-01-05T10:00:00.000Z"
+    },
+    "containers": {
+      "cna": {
+        "descriptions": [
+          {
+            "lang": "en",
+            "value": "A minimal CVE record with no CVSS or CWE."
+          }
+        ],
+        "affected": [],
+        "references": []
+      }
+    }
+  }
+]
