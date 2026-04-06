@@ -139,3 +139,137 @@ class TestBaselineZipCleanup:
         assert not os.path.exists(zip_path), (
             "Temp ZIP was not deleted after baseline processing error"
         )
+
+
+class TestDeltaZipCleanup:
+    def test_zip_deleted_after_successful_delta(self, tmp_path):
+        """Temp ZIP must be deleted after each delta processes successfully."""
+        zip_path = _make_temp_zip(tmp_path)
+        assert os.path.exists(zip_path)
+
+        instance = _make_input_instance()
+        github_client = MagicMock()
+        checkpoint_manager = MagicMock()
+        cve_processor = MagicMock()
+        ew = MagicMock()
+
+        checkpoint_manager.get_checkpoint.return_value = {
+            "last_release": "cve_2024-01-01_0100Z"
+        }
+        github_client.find_delta_releases_since.return_value = [
+            {
+                "tag_name": "cve_2024-01-01_0200Z",
+                "assets": [
+                    {
+                        "name": "delta_CVEs_at_0200Z.zip",
+                        "browser_download_url": "https://example.com/delta.zip",
+                    }
+                ],
+            }
+        ]
+        github_client.download_release_asset.return_value = zip_path
+        github_client.stream_zip_contents.return_value = iter([])
+        cve_processor.max_date_updated = None
+
+        instance._process_deltas(
+            github_client=github_client,
+            checkpoint_manager=checkpoint_manager,
+            cve_processor=cve_processor,
+            batch_size=500,
+            ew=ew,
+        )
+
+        assert not os.path.exists(zip_path), (
+            "Temp ZIP was not deleted after successful delta processing"
+        )
+
+    def test_zip_deleted_when_delta_raises(self, tmp_path):
+        """Temp ZIP must be deleted even when delta processing throws."""
+        zip_path = _make_temp_zip(tmp_path)
+        assert os.path.exists(zip_path)
+
+        instance = _make_input_instance()
+        github_client = MagicMock()
+        checkpoint_manager = MagicMock()
+        cve_processor = MagicMock()
+        ew = MagicMock()
+
+        checkpoint_manager.get_checkpoint.return_value = {
+            "last_release": "cve_2024-01-01_0100Z"
+        }
+        github_client.find_delta_releases_since.return_value = [
+            {
+                "tag_name": "cve_2024-01-01_0200Z",
+                "assets": [
+                    {
+                        "name": "delta_CVEs_at_0200Z.zip",
+                        "browser_download_url": "https://example.com/delta.zip",
+                    }
+                ],
+            }
+        ]
+        github_client.download_release_asset.return_value = zip_path
+        github_client.stream_zip_contents.side_effect = RuntimeError("corrupt zip")
+
+        with pytest.raises(RuntimeError, match="corrupt zip"):
+            instance._process_deltas(
+                github_client=github_client,
+                checkpoint_manager=checkpoint_manager,
+                cve_processor=cve_processor,
+                batch_size=500,
+                ew=ew,
+            )
+
+        assert not os.path.exists(zip_path), (
+            "Temp ZIP was not deleted after delta processing error"
+        )
+
+    def test_all_zips_cleaned_in_multi_delta_run(self, tmp_path):
+        """All temp ZIPs must be cleaned up when processing multiple deltas."""
+        # Create 3 unique zip files in subdirectories
+        zip_paths = []
+        for i in range(3):
+            subdir = tmp_path / f"delta{i}"
+            subdir.mkdir()
+            zip_paths.append(_make_temp_zip(subdir))
+
+        for p in zip_paths:
+            assert os.path.exists(p)
+
+        instance = _make_input_instance()
+        github_client = MagicMock()
+        checkpoint_manager = MagicMock()
+        cve_processor = MagicMock()
+        ew = MagicMock()
+
+        checkpoint_manager.get_checkpoint.return_value = {
+            "last_release": "cve_2024-01-01_0100Z"
+        }
+        github_client.find_delta_releases_since.return_value = [
+            {
+                "tag_name": f"cve_2024-01-01_0{i}00Z",
+                "assets": [
+                    {
+                        "name": f"delta_CVEs_at_0{i}00Z.zip",
+                        "browser_download_url": f"https://example.com/delta{i}.zip",
+                    }
+                ],
+            }
+            for i in range(2, 5)
+        ]
+        github_client.download_release_asset.side_effect = zip_paths
+        github_client.stream_zip_contents.return_value = iter([])
+        cve_processor.max_date_updated = None
+
+        instance._process_deltas(
+            github_client=github_client,
+            checkpoint_manager=checkpoint_manager,
+            cve_processor=cve_processor,
+            batch_size=500,
+            ew=ew,
+        )
+
+        for p in zip_paths:
+            assert not os.path.exists(p), (
+                f"Temp ZIP {p} was not deleted after multi-delta processing"
+            )
