@@ -461,33 +461,42 @@ class CVEListV5Input(Script):
                 self.logger.warning(f"Failed to download delta: {release_tag}")
                 continue
 
-            # Process CVEs
-            batch = []
+            try:
+                # Process CVEs
+                batch = []
 
-            for filename, cve_data in github_client.stream_zip_contents(zip_content):
-                # Only process if newer than checkpoint
-                cve_id = cve_data.get("cveMetadata", {}).get("cveId", "")
-                date_updated = cve_data.get("cveMetadata", {}).get("dateUpdated")
+                for filename, cve_data in github_client.stream_zip_contents(
+                    zip_content
+                ):
+                    # Only process if newer than checkpoint
+                    cve_id = cve_data.get("cveMetadata", {}).get("cveId", "")
+                    date_updated = cve_data.get("cveMetadata", {}).get("dateUpdated")
 
-                if checkpoint_manager.should_process_cve(date_updated):
-                    batch.append(cve_data)
+                    if checkpoint_manager.should_process_cve(date_updated):
+                        batch.append(cve_data)
 
-                if len(batch) >= batch_size:
+                    if len(batch) >= batch_size:
+                        events_written = self._write_batch(batch, cve_processor, ew)
+                        total_events += events_written
+                        batch = []
+
+                # Process remaining batch
+                if batch:
                     events_written = self._write_batch(batch, cve_processor, ew)
                     total_events += events_written
-                    batch = []
 
-            # Process remaining batch
-            if batch:
-                events_written = self._write_batch(batch, cve_processor, ew)
-                total_events += events_written
-
-            # Update checkpoint for each processed delta
-            checkpoint_manager.save_checkpoint(
-                last_release_tag=release_tag,
-                last_cve_date_updated=cve_processor.max_date_updated,
-                records_processed=total_events,
-            )
+                # Update checkpoint for each processed delta
+                checkpoint_manager.save_checkpoint(
+                    last_release_tag=release_tag,
+                    last_cve_date_updated=cve_processor.max_date_updated,
+                    records_processed=total_events,
+                )
+            finally:
+                try:
+                    os.unlink(zip_content)
+                    self.logger.debug(f"Cleaned up temp file: {zip_content}")
+                except OSError:
+                    pass
 
         self.logger.info(f"Delta processing complete: {total_events} events")
 
