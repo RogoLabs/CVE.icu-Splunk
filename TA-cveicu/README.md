@@ -234,11 +234,12 @@ Splunk Index                          Enrichment Lookups
 
 ## Version History
 
-| Version | Date       | Changes                                            |
-| ------- | ---------- | -------------------------------------------------- |
-| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud        |
-| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement |
-| 1.0.0   | 2026-01-22 | Initial release                                    |
+| Version | Date       | Changes                                                   |
+| ------- | ---------- | --------------------------------------------------------- |
+| 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion |
+| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud               |
+| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement        |
+| 1.0.0   | 2026-01-22 | Initial release                                           |
 
 ## License
 
