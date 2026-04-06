@@ -40,6 +40,27 @@ Wrap the download-process-cleanup cycle in `try/finally` blocks in both caller m
 - Nested ZIP cleanup in `stream_zip_contents` — already correct
 - No new dependencies, no config changes
 
+## Tests
+
+Add a new test file `tests/test_zip_cleanup.py` with unit tests covering:
+
+**Baseline cleanup:**
+
+- Verify temp ZIP file is deleted after successful baseline processing
+- Verify temp ZIP file is deleted even when processing raises an exception
+
+**Delta cleanup:**
+
+- Verify temp ZIP file is deleted after each successful delta processing
+- Verify temp ZIP file is deleted even when a delta processing raises an exception
+- Verify all temp ZIPs are cleaned up when processing multiple deltas (loop iteration)
+
+**Test approach:**
+
+- Mock `GitHubClient` methods (`download_release_asset`, `stream_zip_contents`, etc.) and `CheckpointManager`/`CVEProcessor`/`EventWriter`
+- Use `tempfile.mkstemp` to create real temp files, pass their paths from the mocked `download_release_asset`
+- Assert `os.path.exists(zip_path)` is `False` after processing completes (both success and error paths)
+
 ## Alternatives Considered
 
 **Context manager on `download_release_asset`:** More Pythonic but invasive — changes the API contract for a simple fix.
