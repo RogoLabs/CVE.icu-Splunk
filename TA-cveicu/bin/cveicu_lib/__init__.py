@@ -4,7 +4,7 @@ TA-cveicu Library Package
 Core modules for CVE List V5 ingestion from GitHub.
 """
 
-__version__ = "1.0.5"
+__version__ = "1.0.6"
 __author__ = "Your Organization"
 
 from .logging_config import setup_logging

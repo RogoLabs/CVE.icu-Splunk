@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**TA-cveicu** is a Splunk Technology Add-on that ingests the CVE List V5 database (~300K+ CVEs) from the official CVEProject/cvelistV5 GitHub repository. It provides CVSS scoring, CWE classification, EPSS/KEV enrichment, and vulnerability dashboards. Current version: 1.0.5.
+**TA-cveicu** is a Splunk Technology Add-on that ingests the CVE List V5 database (~300K+ CVEs) from the official CVEProject/cvelistV5 GitHub repository. It provides CVSS scoring, CWE classification, EPSS/KEV enrichment, and vulnerability dashboards. Current version: 1.0.6.
 
 ## Repository Structure
 
@@ -32,13 +32,13 @@ All add-on code lives under `TA-cveicu/`. Key areas:
 Package for Splunk deployment:
 
 ```bash
-COPYFILE_DISABLE=1 tar -czf TA-cveicu-1.0.5.tar.gz --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
+COPYFILE_DISABLE=1 tar -czf TA-cveicu-1.0.6.tar.gz --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
 ```
 
 The `COPYFILE_DISABLE=1` prevents macOS resource fork (`._`) files from being included, which cause AppInspect failures. The `.spl` format is just a renamed `.tar.gz`. Splunkbase submission requires passing AppInspect validation:
 
 ```bash
-splunk-appinspect inspect TA-cveicu-1.0.5.tar.gz --mode precert
+splunk-appinspect inspect TA-cveicu-1.0.6.tar.gz --mode precert
 ```
 
 There is no test suite, linter, or CI/CD pipeline in this repository.
