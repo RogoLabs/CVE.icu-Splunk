@@ -32,13 +32,13 @@ All add-on code lives under `TA-cveicu/`. Key areas:
 Package for Splunk deployment:
 
 ```bash
-tar -czf TA-cveicu-1.0.1.tar.gz TA-cveicu/
+COPYFILE_DISABLE=1 tar -czf TA-cveicu-1.0.5.tar.gz --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
 ```
 
-The `.spl` format is just a renamed `.tar.gz`. Splunkbase submission requires passing AppInspect validation:
+The `COPYFILE_DISABLE=1` prevents macOS resource fork (`._`) files from being included, which cause AppInspect failures. The `.spl` format is just a renamed `.tar.gz`. Splunkbase submission requires passing AppInspect validation:
 
 ```bash
-splunk-appinspect inspect TA-cveicu-1.0.1.tar.gz --mode precert
+splunk-appinspect inspect TA-cveicu-1.0.5.tar.gz --mode precert
 ```
 
 There is no test suite, linter, or CI/CD pipeline in this repository.

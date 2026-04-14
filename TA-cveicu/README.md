@@ -36,7 +36,7 @@ This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from t
 
 ### From Splunkbase
 
-1. Download TA-cveicu from Splunkbase
+1. Download [TA-cveicu from Splunkbase](https://splunkbase.splunk.com/app/8395)
 2. Go to **Apps > Manage Apps > Install app from file**
 3. Upload the `.spl` or `.tar.gz` package
 4. Restart Splunk if prompted
@@ -101,18 +101,20 @@ interval = 3600
 - `title` - Vulnerability title
 - `description` - Vulnerability description
 
-### Affected Products (Multi-value)
+### Affected Products
 
-- `affected_vendor` - Affected vendor names
-- `affected_product` - Affected product names
-- `cwe_id` - Associated CWE identifiers
+- `affected_vendor` - Primary affected vendor name
+- `affected_product` - Primary affected product name
+- `cwe_id` - Primary CWE identifier
 
 ### CVSS Scores
 
-- `cvss_v40_score`, `cvss_v40_severity`, `cvss_v40_vector`
-- `cvss_v31_score`, `cvss_v31_severity`, `cvss_v31_vector`
-- `cvss_v30_score`, `cvss_v30_severity`, `cvss_v30_vector`
-- `cvss_v20_score`, `cvss_v20_vector`
+- `cvss_v40_score`, `cvss_v40_severity`, `cvss_v40_vector` - CVSS v4.0
+- `cvss_v31_score`, `cvss_v31_severity`, `cvss_v31_vector` - CVSS v3.1
+- `cvss_v30_score`, `cvss_v30_severity`, `cvss_v30_vector` - CVSS v3.0
+- `cvss_v20_score`, `cvss_v20_vector` - CVSS v2.0
+- `cvss_score` - Best available CVSS score (v4.0 > v3.1 > v3.0 > v2.0)
+- `cvss_severity` - Best available severity rating
 
 ### ADP Enrichment
 
@@ -120,12 +122,25 @@ interval = 3600
 - `has_cve_program_container` - Boolean: CVE Program Container present
 - `cisa_ssvc` - CISA SSVC decision tree data (JSON)
 
+### CIM Vulnerabilities Data Model
+
+The following fields map to the [Splunk CIM Vulnerabilities](https://docs.splunk.com/Documentation/CIM/latest/User/Vulnerabilities) data model:
+
+- `vulnerability_id` - CVE identifier
+- `cvss` - Best available CVSS score
+- `severity_id` - CVSS score (numeric severity)
+- `vendor_product` - Affected vendor
+- `dest` - CVE identifier (destination)
+- `signature` - CVE identifier
+- `signature_id` - CVE identifier
+- `category` - CWE classification
+
 ## Example Searches
 
 ### High Severity CVEs (Last 7 Days)
 
 ```spl
-index=cve_data sourcetype="cveicu:record"
+index=<your_cve_index> sourcetype="cveicu:record"
 | where cvss_v31_score >= 9.0 OR cvss_v40_score >= 9.0
 | eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, "Unknown")
 | table cve_id, title, severity, affected_vendor, affected_product
@@ -134,7 +149,7 @@ index=cve_data sourcetype="cveicu:record"
 ### CVEs by Vendor
 
 ```spl
-index=cve_data sourcetype="cveicu:record"
+index=<your_cve_index> sourcetype="cveicu:record"
 | mvexpand affected_vendor
 | stats count by affected_vendor
 | sort -count
@@ -144,7 +159,7 @@ index=cve_data sourcetype="cveicu:record"
 ### CVEs with CISA-ADP Enrichment
 
 ```spl
-index=cve_data sourcetype="cveicu:record" has_cisa_adp=true
+index=<your_cve_index> sourcetype="cveicu:record" has_cisa_adp=true
 | spath input=cisa_ssvc
 | table cve_id, title, cisa_ssvc
 ```
@@ -152,7 +167,7 @@ index=cve_data sourcetype="cveicu:record" has_cisa_adp=true
 ### New CVEs by Day
 
 ```spl
-index=cve_data sourcetype="cveicu:record"
+index=<your_cve_index> sourcetype="cveicu:record"
 | timechart span=1d count
 ```
 
@@ -182,12 +197,12 @@ index=_internal source="*TA-cveicu.log*"
 | ----------------------- | --------------------------------------------------- |
 | Rate limit errors       | Configure GitHub Personal Access Token              |
 | No events ingested      | Check network connectivity to api.github.com        |
-| Incomplete initial load | Allow sufficient time; baseline contains 200K+ CVEs |
+| Incomplete initial load | Allow sufficient time; baseline contains 300K+ CVEs |
 | Memory errors           | Reduce batch_size parameter                         |
 
 ## Data Volume Estimates
 
-- **Initial Load**: ~200,000+ CVE records (~2-3 GB indexed)
+- **Initial Load**: ~300,000+ CVE records (~2-3 GB indexed)
 - **Daily Updates**: ~50-200 new/updated CVEs (~10-50 MB/day)
 - **Hourly Deltas**: ~5-20 CVEs per delta release
 
