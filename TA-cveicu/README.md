@@ -236,6 +236,7 @@ Splunk Index                          Enrichment Lookups
 
 | Version | Date       | Changes                                                   |
 | ------- | ---------- | --------------------------------------------------------- |
+| 1.0.5   | 2026-04-15 | Fix field extractions and modular input registration      |
 | 1.0.4   | 2026-04-14 | Rename data input to "cve.icu" for discoverability        |
 | 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion |
 | 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud               |

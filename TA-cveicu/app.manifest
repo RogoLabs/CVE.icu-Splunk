@@ -5,7 +5,7 @@
     "id": {
       "group": null,
       "name": "TA-cveicu",
-      "version": "1.0.4"
+      "version": "1.0.5"
     },
     "author": [
       {
@@ -14,7 +14,7 @@
         "company": "cve.icu"
       }
     ],
-    "releaseDate": "2026-04-14",
+    "releaseDate": "2026-04-15",
     "description": "Ingest the complete CVE database (300K+ vulnerabilities) from the official CVE Program GitHub repository. Features efficient bulk downloads, incremental updates, CVSS scoring, CWE classification, and real-time vulnerability intelligence dashboards powered by cve.icu.",
     "classification": {
       "intendedAudience": "Security",

@@ -82,7 +82,7 @@ class GitHubClient:
         # Set headers
         headers = {
             "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "TA-cveicu/1.0.4 Splunk-Addon",
+            "User-Agent": "TA-cveicu/1.0.5 Splunk-Addon",
         }
 
         if self.github_token:
