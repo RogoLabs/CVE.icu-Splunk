@@ -18,10 +18,11 @@ from typing import Optional
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 sys.path.insert(0, os.path.dirname(__file__))
 
+_SPLUNKLIB_AVAILABLE = True
 try:
     from splunklib.modularinput import Script, Scheme, Argument, Event, EventWriter
 except ImportError:
-    # Fallback for testing
+    _SPLUNKLIB_AVAILABLE = False
     Script = object
     Scheme = None
     Argument = None
@@ -573,5 +574,56 @@ class CVEListV5Input(Script):
         return str(value).lower() in ("true", "1", "yes", "on")
 
 
+def _fallback_scheme_xml():
+    """Return scheme XML without splunklib for --scheme introspection.
+
+    When splunklib cannot be imported (e.g., missing shared libraries like
+    libssl.so.3), Splunk's scheme introspection fails with exit code 1.
+    This fallback ensures the modular input always registers correctly.
+    """
+    return """<scheme>
+    <title>cve.icu</title>
+    <description>Ingests CVE V5 records from the CVEProject/cvelistV5 GitHub repository. Downloads baseline and delta ZIP files for efficient bulk processing.</description>
+    <use_external_validation>false</use_external_validation>
+    <streaming_mode>xml</streaming_mode>
+    <use_single_instance>false</use_single_instance>
+    <endpoint>
+        <args>
+            <arg name="include_adp">
+                <title>Include ADP Data</title>
+                <description>Include ADP (Authorized Data Publisher) container data (CISA-ADP, CVE Program Container)</description>
+                <data_type>boolean</data_type>
+                <required_on_edit>false</required_on_edit>
+                <required_on_create>false</required_on_create>
+            </arg>
+            <arg name="include_rejected">
+                <title>Include Rejected CVEs</title>
+                <description>Include CVEs with REJECTED state</description>
+                <data_type>boolean</data_type>
+                <required_on_edit>false</required_on_edit>
+                <required_on_create>false</required_on_create>
+            </arg>
+            <arg name="batch_size">
+                <title>Batch Size</title>
+                <description>Number of CVE records to process per batch (default: 500)</description>
+                <data_type>number</data_type>
+                <required_on_edit>false</required_on_edit>
+                <required_on_create>false</required_on_create>
+            </arg>
+        </args>
+    </endpoint>
+</scheme>"""
+
+
 if __name__ == "__main__":
+    if "--scheme" in sys.argv and not _SPLUNKLIB_AVAILABLE:
+        sys.stdout.write(_fallback_scheme_xml())
+        sys.exit(0)
+    if not _SPLUNKLIB_AVAILABLE:
+        sys.stderr.write(
+            "ERROR: splunklib failed to import. "
+            "Run this script via 'splunk cmd python' or ensure Python SSL "
+            "libraries are available.\n"
+        )
+        sys.exit(1)
     sys.exit(CVEListV5Input().run(sys.argv))
