@@ -64,8 +64,8 @@ class CVEListV5Input(Script):
         if Scheme is None:
             return None
 
-        scheme = Scheme("CVE List V5")
-        scheme.title = "CVE List V5"
+        scheme = Scheme("cve.icu")
+        scheme.title = "cve.icu"
         scheme.description = (
             "Ingests CVE V5 records from the CVEProject/cvelistV5 GitHub repository. "
             "Downloads baseline and delta ZIP files for efficient bulk processing."

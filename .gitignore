@@ -1,4 +1,11 @@
 
+# Splunk packages
+*.tar.gz
+*.spl
+
+# Claude Code
+.claude/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

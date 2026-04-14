@@ -60,7 +60,7 @@ A GitHub Personal Access Token increases API rate limits from 60 to 5,000 reques
 
 ### Step 2: Create Data Input
 
-1. Go to **Settings > Data Inputs > CVE List V5**
+1. Go to **Settings > Data Inputs > cve.icu**
 2. Click **New**
 3. Configure:
    - **Name**: Unique input name (e.g., `cve_feed`)
@@ -236,6 +236,7 @@ Splunk Index                          Enrichment Lookups
 
 | Version | Date       | Changes                                                   |
 | ------- | ---------- | --------------------------------------------------------- |
+| 1.0.4   | 2026-04-14 | Rename data input to "cve.icu" for discoverability        |
 | 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion |
 | 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud               |
 | 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement        |

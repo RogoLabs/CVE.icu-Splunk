@@ -107,6 +107,14 @@ def splunk_api(splunk_service):
                 **kwargs,
             )
 
+        def delete(self, path, **kwargs):
+            return requests.delete(
+                f"{self.url}{path}",
+                auth=self.auth,
+                verify=False,
+                **kwargs,
+            )
+
         def run_search(self, query, timeout=120):
             """Run a one-shot search and return results."""
             resp = self.post(
