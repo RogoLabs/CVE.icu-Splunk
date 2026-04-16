@@ -14,7 +14,7 @@
         },
         "ds_risk_table": {
             "type": "ds.search",
-            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| sort - risk_priority\n| where $epss_filter$ $kev_filter$\n| head 100\n| table cve_id cvss_score epss_score in_kev ssvc_exploitation risk_priority"}
+            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| sort - risk_priority\n| where ($epss_filter$) AND ($kev_filter$)\n| head 100\n| table cve_id cvss_score epss_score in_kev ssvc_exploitation risk_priority"}
         },
         "ds_risk_trend": {
             "type": "ds.search",
@@ -26,12 +26,13 @@
             "type": "input.dropdown",
             "options": {
                 "token": "epss_filter",
-                "defaultValue": "epss_score > 0",
+                "defaultValue": "1=1",
                 "items": [
-                    {"label": "All with EPSS", "value": "epss_score > 0"},
-                    {"label": "EPSS > 0.1", "value": "epss_score > 0.1"},
-                    {"label": "EPSS > 0.5", "value": "epss_score > 0.5"},
-                    {"label": "EPSS > 0.9", "value": "epss_score > 0.9"}
+                    {"label": "All", "value": "1=1"},
+                    {"label": "EPSS > 0", "value": "tonumber(epss_score) > 0"},
+                    {"label": "EPSS > 0.1", "value": "tonumber(epss_score) > 0.1"},
+                    {"label": "EPSS > 0.5", "value": "tonumber(epss_score) > 0.5"},
+                    {"label": "EPSS > 0.9", "value": "tonumber(epss_score) > 0.9"}
                 ]
             },
             "title": "EPSS Threshold"
@@ -40,9 +41,9 @@
             "type": "input.dropdown",
             "options": {
                 "token": "kev_filter",
-                "defaultValue": "*",
+                "defaultValue": "1=1",
                 "items": [
-                    {"label": "All", "value": "*"},
+                    {"label": "All", "value": "1=1"},
                     {"label": "KEV Only", "value": "in_kev=\"true\""}
                 ]
             },
