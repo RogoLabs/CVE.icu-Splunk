@@ -48,37 +48,49 @@ This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from t
 
 ## Configuration
 
-### Step 1: Configure GitHub Token (Recommended)
+The add-on starts ingesting CVE data immediately after installation using a default input. No setup is required for basic operation.
 
-A GitHub Personal Access Token increases API rate limits from 60 to 5,000 requests/hour.
+### GitHub Token (Optional but Recommended)
 
-1. Create a GitHub token at **Settings > Developer settings > Personal access tokens > Tokens (classic)**
-2. Select scope: `public_repo` (read access to public repositories)
-3. In Splunk, go to **Apps > TA-cveicu > Setup**
-4. Enter your GitHub Personal Access Token
-5. Click **Save**
+The add-on works without authentication, but GitHub's unauthenticated API rate limit is **60 requests/hour** — shared across all unauthenticated traffic from your IP. If you run other tools that call the GitHub API (CLI, CI/CD, IDE plugins, etc.), you may exhaust this limit and see "rate limit exceeded" errors.
 
-### Step 2: Create Data Input
+A GitHub Personal Access Token increases this to **5,000 requests/hour**:
 
-1. Go to **Settings > Data Inputs > cve.icu**
-2. Click **New**
-3. Configure:
-   - **Name**: Unique input name (e.g., `cve_feed`)
-   - **Index**: Destination index for CVE events
-   - **Include ADP Data**: Include CISA-ADP and CVE Program Container data (default: true)
-   - **Include Rejected**: Include CVEs with REJECTED state (default: true)
-   - **Batch Size**: Records per batch (default: 500)
-4. Click **Save**
+1. Create a token at **Settings > Developer settings > Personal access tokens > Tokens (classic)**
+2. Select scope: `public_repo` (read-only access to public repositories)
+3. In Splunk, store the token via the REST API:
+   ```
+   curl -k -u admin:<password> \
+     https://localhost:8089/servicesNS/nobody/TA-cveicu/storage/passwords \
+     -d name=github_token -d realm=TA-cveicu -d password=<your_token>
+   ```
 
-### Input Configuration (inputs.conf)
+> **Note:** Most users with light GitHub API usage will not hit the rate limit. The initial baseline download requires only a few API calls. If you see "GitHub API rate limit exceeded" errors in the add-on logs, configuring a token will resolve the issue.
+
+### Customizing the Data Input
+
+The default input writes to `index=main` with hourly polling. To customize:
 
 ```ini
-[cveicu://cve_production]
+# local/inputs.conf
+[cveicu://default]
 index = cve_data
 include_adp = true
-include_rejected = true
+include_rejected = false
 batch_size = 500
 interval = 3600
+```
+
+You can also create additional inputs via **Settings > Data Inputs > cve.icu**.
+
+### Changing the Index
+
+All dashboards and saved searches use the `cveicu_index` macro (defaults to `index=main`). To use a different index:
+
+```ini
+# local/macros.conf
+[cveicu_index]
+definition = index=cve_data
 ```
 
 ## Sourcetypes
@@ -249,15 +261,16 @@ Splunk Index                          Enrichment Lookups
 
 ## Version History
 
-| Version | Date       | Changes                                                         |
-| ------- | ---------- | --------------------------------------------------------------- |
-| 1.0.6   | 2026-04-14 | Fix modular input registration on systems with missing SSL libs |
-| 1.0.5   | 2026-04-14 | Fix field extractions and modular input registration            |
-| 1.0.4   | 2026-04-14 | Rename data input to "cve.icu" for discoverability              |
-| 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion       |
-| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud                     |
-| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement              |
-| 1.0.0   | 2026-01-22 | Initial release                                                 |
+| Version | Date       | Changes                                                                |
+| ------- | ---------- | ---------------------------------------------------------------------- |
+| 2.0.0   | 2026-04-21 | Dashboard Studio rework, macros.conf, CI pipeline, EPSS/KEV enrichment |
+| 1.0.6   | 2026-04-14 | Fix modular input registration on systems with missing SSL libs        |
+| 1.0.5   | 2026-04-14 | Fix field extractions and modular input registration                   |
+| 1.0.4   | 2026-04-14 | Rename data input to "cve.icu" for discoverability                     |
+| 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion              |
+| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud                            |
+| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement                     |
+| 1.0.0   | 2026-01-22 | Initial release                                                        |
 
 ## License
 
