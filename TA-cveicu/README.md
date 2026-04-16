@@ -62,7 +62,7 @@ A GitHub Personal Access Token increases this to **5,000 requests/hour**:
    ```
    curl -k -u admin:<password> \
      https://localhost:8089/servicesNS/nobody/TA-cveicu/storage/passwords \
-     -d name=github_token -d realm=TA-cveicu -d password=<your_token>
+     -d name=github_api_token -d realm=TA-cveicu -d password=<your_token>
    ```
 
 > **Note:** Most users with light GitHub API usage will not hit the rate limit. The initial baseline download requires only a few API calls. If you see "GitHub API rate limit exceeded" errors in the add-on logs, configuring a token will resolve the issue.
