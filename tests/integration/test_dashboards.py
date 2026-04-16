@@ -63,7 +63,6 @@ class TestDashboardLoading:
         "risk_priority",
         "vulnerability_landscape",
         "operational_health",
-        "setup_page_dashboard",
     ]
 
     @pytest.mark.parametrize("dashboard", DASHBOARDS)

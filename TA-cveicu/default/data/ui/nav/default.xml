@@ -3,6 +3,5 @@
     <view name="risk_priority" label="Risk Priority" />
     <view name="vulnerability_landscape" label="Vulnerability Landscape" />
     <view name="operational_health" label="Operational Health" />
-    <view name="setup_page_dashboard" label="Configuration" />
     <view name="search" label="Search" />
 </nav>
