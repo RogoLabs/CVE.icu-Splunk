@@ -22,7 +22,7 @@ jobs:
         run: pip install pytest
       - name: Run unit tests
         env:
-          PYTHONPATH: TA-cveicu/bin:TA-cveicu/bin/lib
+          PYTHONPATH: ${{ github.workspace }}/TA-cveicu/bin:${{ github.workspace }}/TA-cveicu/bin/lib
         run: pytest tests/unit/ -v
 
   appinspect:
