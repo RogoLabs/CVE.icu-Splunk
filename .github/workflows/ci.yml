@@ -100,12 +100,27 @@ jobs:
             echo "Waiting... ($i/30)"
             sleep 10
           done
+      - name: Verify add-on installation
+        run: |
+          echo "=== Checking modular input registration ==="
+          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk cmd python3 /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py --scheme' 2>&1 || true
+          echo "=== Checking splunkd logs for cveicu ==="
+          docker exec -u splunk splunk bash -c 'grep -i "cveicu\|Introspect" /opt/splunk/var/log/splunk/splunkd.log | tail -20' 2>&1 || true
+          echo "=== Listing installed apps ==="
+          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/apps/local?output_mode=json' | python3 -c "import sys,json; apps=json.load(sys.stdin)['entry']; print('\n'.join(a['name'] for a in apps))" 2>&1 || true
+          echo "=== Checking modular inputs ==="
+          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/data/modular-input?output_mode=json' | python3 -c "import sys,json; inputs=json.load(sys.stdin)['entry']; print('\n'.join(i['name'] for i in inputs))" 2>&1 || true
       - name: Run integration tests
         env:
           SPLUNK_URL: https://localhost:8089
           SPLUNK_USER: admin
           SPLUNK_PASSWORD: TestPassword123!
         run: pytest tests/integration/ -v -m "not live"
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "=== splunkd.log (last 50 lines) ==="
+          docker exec -u splunk splunk bash -c 'tail -50 /opt/splunk/var/log/splunk/splunkd.log' 2>&1 || true
       - name: Cleanup
         if: always()
         run: docker rm -f splunk || true
