@@ -110,7 +110,7 @@ class GitHubClient:
         stream: bool = False,
         timeout: Optional[int] = None,
         **kwargs,
-    ) -> requests.Response:
+    ) -> "requests.Response":
         """
         Make an HTTP request with rate limit handling.
 
