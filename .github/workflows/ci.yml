@@ -64,15 +64,22 @@ jobs:
             -p 8089:8089 -p 8000:8000 \
             -e SPLUNK_START_ARGS=--accept-license \
             -e SPLUNK_PASSWORD=TestPassword123! \
+            -e "SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com" \
             splunk/splunk:latest
           echo "Waiting for Splunk to be healthy..."
-          for i in $(seq 1 40); do
+          for i in $(seq 1 60); do
+            STATUS=$(docker inspect --format='{{.State.Status}}' splunk 2>/dev/null || echo "missing")
+            if [ "$STATUS" = "exited" ]; then
+              echo "ERROR: Container exited unexpectedly"
+              docker logs splunk 2>&1 | tail -30
+              exit 1
+            fi
             if curl -sf -k -u admin:TestPassword123! \
               https://localhost:8089/services/server/info > /dev/null 2>&1; then
               echo "Splunk is ready"
               break
             fi
-            echo "Waiting... ($i/40)"
+            echo "Waiting... ($i/60) [container: $STATUS]"
             sleep 10
           done
       - name: Install add-on
