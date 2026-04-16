@@ -6,33 +6,19 @@ Ingests CVE V5 records from the GitHub CVEProject/cvelistV5 repository
 using release ZIP files for efficient bulk and delta downloads.
 """
 
-import os
 import sys
-import json
-import time
-import traceback
-from datetime import datetime
-from typing import Optional
 
-# Add lib path for bundled packages
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
-sys.path.insert(0, os.path.dirname(__file__))
-
-# Early --scheme handler: Splunk calls this during startup to register the
-# modular input. If ANY import below fails (splunklib, requests, SSL libs),
-# the script exits with code 1 and the data input never appears. By handling
-# --scheme here, before heavy imports, registration always succeeds.
+# Handle --scheme before ANY other imports. Splunk calls this at startup
+# to register the modular input. If this fails, the input silently
+# disappears from the UI with no user-facing error. Only `sys` is needed
+# here — it is a builtin module that cannot fail to import.
 if __name__ == "__main__" and "--scheme" in sys.argv:
-    try:
-        from splunklib.modularinput import Script, Scheme, Argument
-    except Exception:
-        # splunklib unavailable — emit scheme XML directly and exit
-        sys.stdout.write("""<scheme>
+    sys.stdout.write("""<scheme>
     <title>cve.icu</title>
     <description>Ingests CVE V5 records from the CVEProject/cvelistV5 GitHub repository. Downloads baseline and delta ZIP files for efficient bulk processing.</description>
     <use_external_validation>false</use_external_validation>
-    <streaming_mode>xml</streaming_mode>
     <use_single_instance>false</use_single_instance>
+    <streaming_mode>xml</streaming_mode>
     <endpoint>
         <args>
             <arg name="include_adp">
@@ -59,23 +45,35 @@ if __name__ == "__main__" and "--scheme" in sys.argv:
         </args>
     </endpoint>
 </scheme>""")
-        sys.exit(0)
+    sys.stdout.flush()
+    sys.exit(0)
+
+import os
+import json
+import time
+import traceback
+from datetime import datetime
+from typing import Optional
+
+# Add lib path for bundled packages
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
+sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     from splunklib.modularinput import Script, Scheme, Argument, Event, EventWriter
-except ImportError:
-    Script = object
-    Scheme = None
-    Argument = None
-    Event = None
-    EventWriter = None
-
-from cveicu_lib.logging_config import setup_logging, get_logger
-from cveicu_lib.credential_manager import CredentialManager
-from cveicu_lib.github_client import GitHubClient
-from cveicu_lib.checkpoint_manager import CheckpointManager
-from cveicu_lib.cve_processor import CVEProcessor
-from cveicu_lib.resource_manager import ResourceManager, TimeoutManager
+    from cveicu_lib.logging_config import setup_logging, get_logger
+    from cveicu_lib.credential_manager import CredentialManager
+    from cveicu_lib.github_client import GitHubClient
+    from cveicu_lib.checkpoint_manager import CheckpointManager
+    from cveicu_lib.cve_processor import CVEProcessor
+    from cveicu_lib.resource_manager import ResourceManager, TimeoutManager
+except (ImportError, OSError) as e:
+    sys.stderr.write(
+        f"ERROR TA-cveicu: Failed to import required libraries: {type(e).__name__}: {e}\n"
+        f"ERROR TA-cveicu: Python: {sys.executable} {sys.version}\n"
+        f"ERROR TA-cveicu: sys.path: {sys.path}\n"
+    )
+    sys.exit(1)
 
 
 class CVEListV5Input(Script):
