@@ -87,9 +87,9 @@ jobs:
           COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
             --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
           docker cp TA-cveicu.tar.gz splunk:/tmp/TA-cveicu.tar.gz
-          docker exec splunk bash -c 'cd /opt/splunk/etc/apps && tar xzf /tmp/TA-cveicu.tar.gz'
-          docker exec splunk bash -c 'chmod +x /opt/splunk/etc/apps/TA-cveicu/bin/*.py'
-          docker exec splunk bash -c '/opt/splunk/bin/splunk restart --accept-license --answer-yes --no-prompt'
+          docker exec -u splunk splunk bash -c 'cd /opt/splunk/etc/apps && tar xzf /tmp/TA-cveicu.tar.gz'
+          docker exec -u splunk splunk bash -c 'chmod +x /opt/splunk/etc/apps/TA-cveicu/bin/*.py'
+          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk restart --accept-license --answer-yes --no-prompt'
           echo "Waiting for Splunk restart..."
           for i in $(seq 1 30); do
             if curl -sf -k -u admin:TestPassword123! \
