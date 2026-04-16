@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: mark test as requiring live API access",
+    "integration: mark test as requiring Docker Splunk instance",
+]
