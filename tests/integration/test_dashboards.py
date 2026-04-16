@@ -33,16 +33,17 @@ def splunk_session():
 class TestModularInputRegistration:
     def test_cveicu_input_is_registered(self, splunk_session):
         resp = splunk_session.get(
-            f"{SPLUNK_URL}/services/data/modular-input/cveicu",
+            f"{SPLUNK_URL}/servicesNS/admin/TA-cveicu/data/inputs/cveicu",
             params={"output_mode": "json"},
         )
         assert resp.status_code == 200, f"Modular input not registered: {resp.text}"
 
     def test_cveicu_input_creation(self, splunk_session):
         resp = splunk_session.post(
-            f"{SPLUNK_URL}/servicesNS/admin/TA-cveicu/data/inputs/cveicu/ci_test_input",
+            f"{SPLUNK_URL}/servicesNS/admin/TA-cveicu/data/inputs/cveicu",
             params={"output_mode": "json"},
             data={
+                "name": "ci_test_input",
                 "include_adp": "true",
                 "include_rejected": "true",
                 "batch_size": "100",
