@@ -10,7 +10,7 @@
         },
         "ds_high_epss_7d": {
             "type": "ds.search",
-            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\" earliest=-7d@d latest=now\n| spath cveMetadata.cveId\n| rename \"cveMetadata.cveId\" as cve_id\n| lookup epss_lookup.csv cve_id OUTPUT epss_score\n| where tonumber(epss_score) > 0.5\n| stats dc(cve_id) as high_epss_count"}
+            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.cveId\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.cveId\" as cve_id, \"cveMetadata.datePublished\" as date_published\n| eval pub_time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where pub_time > relative_time(now(), \"-7d@d\")\n| lookup epss_lookup.csv cve_id OUTPUT epss_score\n| where tonumber(epss_score) > 0.5\n| stats dc(cve_id) as high_epss_count"}
         },
         "ds_risk_table": {
             "type": "ds.search",
@@ -18,7 +18,7 @@
         },
         "ds_risk_trend": {
             "type": "ds.search",
-            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\" earliest=-30d@d latest=now\n| spath cveMetadata.cveId\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.cveId\" as cve_id, \"cveMetadata.datePublished\" as date_published\n| lookup risk_priority_lookup.csv cve_id OUTPUT risk_priority\n| where tonumber(risk_priority) > 50\n| timechart span=1d dc(cve_id) as high_risk_cves"}
+            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.cveId\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.cveId\" as cve_id, \"cveMetadata.datePublished\" as date_published\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-30d@d\")\n| lookup risk_priority_lookup.csv cve_id OUTPUT risk_priority\n| where tonumber(risk_priority) > 50\n| timechart span=1d dc(cve_id) as high_risk_cves"}
         }
     },
     "inputs": {

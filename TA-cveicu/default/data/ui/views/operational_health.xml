@@ -26,7 +26,7 @@
         },
         "ds_daily_volume": {
             "type": "ds.search",
-            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\" earliest=-7d@d latest=now\n| timechart span=1d count as events_per_day"}
+            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.datePublished\" as date_published\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-7d@d\")\n| timechart span=1d count as events_per_day"}
         },
         "ds_internal_errors": {
             "type": "ds.search",
@@ -52,7 +52,7 @@
         "viz_error_count": {"type": "splunk.singlevalue", "dataSources": {"primary": "ds_error_count"}, "title": "Errors (Last 24h)", "options": {"majorColor": "#dc4e41"}},
         "viz_enrichment": {"type": "splunk.table", "dataSources": {"primary": "ds_enrichment_freshness"}, "title": "Enrichment Lookup Sizes"},
         "viz_checkpoint": {"type": "splunk.table", "dataSources": {"primary": "ds_checkpoint_state"}, "title": "Recent Audit Events"},
-        "viz_daily_volume": {"type": "splunk.column", "dataSources": {"primary": "ds_daily_volume"}, "title": "Daily Event Volume (Last 7 Days)"},
+        "viz_daily_volume": {"type": "splunk.column", "dataSources": {"primary": "ds_daily_volume"}, "title": "CVEs Published Per Day (Last 7 Days)"},
         "viz_errors_table": {"type": "splunk.table", "dataSources": {"primary": "ds_internal_errors"}, "title": "Recent Errors and Warnings"}
     },
     "title": "Operational Health",

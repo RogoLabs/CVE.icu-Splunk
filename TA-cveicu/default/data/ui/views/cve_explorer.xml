@@ -17,11 +17,7 @@
         "ds_ingest_sparkline": {
             "type": "ds.search",
             "options": {
-                "query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| timechart span=1d count",
-                "queryParameters": {
-                    "earliest": "-30d@d",
-                    "latest": "now"
-                }
+                "query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.datePublished\" as date_published\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-30d@d\")\n| timechart span=1d count"
             }
         }
     },
@@ -91,8 +87,8 @@
         "viz_ingest_sparkline": {
             "type": "splunk.line",
             "dataSources": {"primary": "ds_ingest_sparkline"},
-            "title": "Ingestion Volume (Last 30 Days)",
-            "options": {"xAxisTitleText": "Date", "yAxisTitleText": "CVEs Ingested"}
+            "title": "CVEs Published Per Day (Last 30 Days)",
+            "options": {"xAxisTitleText": "Date", "yAxisTitleText": "CVEs Published"}
         },
         "viz_cve_table": {
             "type": "splunk.table",
