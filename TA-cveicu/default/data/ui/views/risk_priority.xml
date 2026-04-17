@@ -16,9 +16,9 @@
             "type": "ds.search",
             "options": {"query": "| inputlookup risk_priority_lookup.csv\n| sort - epss_score\n| where ($epss_filter$) AND ($kev_filter$)\n| head 100\n| table cve_id cvss_score epss_score in_kev ssvc_exploitation"}
         },
-        "ds_risk_trend": {
+        "ds_epss_dist": {
             "type": "ds.search",
-            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.cveId\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.cveId\" as cve_id, \"cveMetadata.datePublished\" as date_published\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-30d@d\")\n| lookup epss_lookup.csv cve_id OUTPUT epss_score\n| where tonumber(epss_score) > 0.5\n| timechart span=1d dc(cve_id) as high_epss_cves"}
+            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| eval bucket=case(tonumber(epss_score)>=0.9, \"0.9 - 1.0 (Critical)\", tonumber(epss_score)>=0.5, \"0.5 - 0.9 (High)\", tonumber(epss_score)>=0.1, \"0.1 - 0.5 (Medium)\", tonumber(epss_score)>0, \"0.0 - 0.1 (Low)\", 1=1, \"No EPSS\")\n| stats count by bucket\n| sort - count"}
         }
     },
     "inputs": {
@@ -56,7 +56,7 @@
         "structure": [
             {"item": "viz_kev_count", "type": "block", "position": {"x": 0, "y": 0, "w": 720, "h": 120}},
             {"item": "viz_high_epss", "type": "block", "position": {"x": 720, "y": 0, "w": 720, "h": 120}},
-            {"item": "viz_risk_trend", "type": "block", "position": {"x": 0, "y": 120, "w": 1440, "h": 250}},
+            {"item": "viz_epss_dist", "type": "block", "position": {"x": 0, "y": 120, "w": 1440, "h": 250}},
             {"item": "viz_risk_table", "type": "block", "position": {"x": 0, "y": 370, "w": 1440, "h": 500}}
         ],
         "globalInputs": ["input_epss_threshold", "input_kev_only"]
@@ -74,10 +74,10 @@
             "title": "High-EPSS CVEs (Last 7 Days)",
             "options": {"majorColor": "#f8be34"}
         },
-        "viz_risk_trend": {
-            "type": "splunk.line",
-            "dataSources": {"primary": "ds_risk_trend"},
-            "title": "High-EPSS CVEs Per Day (Last 30 Days)"
+        "viz_epss_dist": {
+            "type": "splunk.bar",
+            "dataSources": {"primary": "ds_epss_dist"},
+            "title": "EPSS Score Distribution"
         },
         "viz_risk_table": {
             "type": "splunk.table",
