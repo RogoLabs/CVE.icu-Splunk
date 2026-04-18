@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "scripts": {
+    "screenshots": "node screenshots.js",
+    "install-browser": "npx playwright install chromium"
+  },
+  "dependencies": {
+    "playwright": "^1.52.0"
+  }
+}
