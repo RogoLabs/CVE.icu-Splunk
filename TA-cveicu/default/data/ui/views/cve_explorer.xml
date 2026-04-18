@@ -7,13 +7,13 @@
         "ds_cve_search": {
             "type": "ds.search",
             "options": {
-                "query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.cveId\n| spath cveMetadata.state\n| spath cveMetadata.datePublished\n| spath containers.cna.title\n| spath containers.cna.affected{0}.vendor\n| spath containers.cna.affected{0}.product\n| spath containers.cna.metrics{0}.cvssV3_1.baseScore\n| spath containers.cna.metrics{0}.cvssV3_1.baseSeverity\n| spath containers.cna.metrics{0}.cvssV4_0.baseScore\n| spath containers.cna.metrics{0}.cvssV4_0.baseSeverity\n| spath containers.cna.problemTypes{0}.descriptions{0}.cweId\n| rename \"cveMetadata.cveId\" as cve_id, \"cveMetadata.state\" as state, \"cveMetadata.datePublished\" as date_published, \"containers.cna.title\" as title, \"containers.cna.affected{0}.vendor\" as vendor, \"containers.cna.affected{0}.product\" as product, \"containers.cna.metrics{0}.cvssV3_1.baseScore\" as cvss_v31_score, \"containers.cna.metrics{0}.cvssV3_1.baseSeverity\" as cvss_v31_severity, \"containers.cna.metrics{0}.cvssV4_0.baseScore\" as cvss_v40_score, \"containers.cna.metrics{0}.cvssV4_0.baseSeverity\" as cvss_v40_severity, \"containers.cna.problemTypes{0}.descriptions{0}.cweId\" as cwe_id\n| eval cvss_score=coalesce(cvss_v40_score, cvss_v31_score)\n| eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, \"NONE\")\n| where state=\"PUBLISHED\"\n| search $vendor_filter$ $severity_filter$ $cwe_filter$\n| table cve_id title vendor product cvss_score severity cwe_id date_published\n| sort - date_published"
+                "query": "`cveicu_index` sourcetype=\"cveicu:record\" state=\"PUBLISHED\"\n| eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, \"NONE\")\n| search $vendor_filter$ $severity_filter$ $cwe_filter$\n| table cve_id title affected_vendor affected_product cvss_score severity cwe_id date_published\n| rename cve_id as \"CVE ID\", title as \"Title\", affected_vendor as \"Vendor\", affected_product as \"Product\", cvss_score as \"CVSS\", severity as \"Severity\", cwe_id as \"CWE\", date_published as \"Published\"\n| sort - Published"
             }
         },
         "ds_publish_sparkline": {
             "type": "ds.search",
             "options": {
-                "query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.datePublished\" as date_published\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-30d@d\")\n| timechart span=1d count"
+                "query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-30d@d\")\n| timechart span=1d count"
             }
         }
     },

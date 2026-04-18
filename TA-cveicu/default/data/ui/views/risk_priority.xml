@@ -10,11 +10,11 @@
         },
         "ds_high_epss_7d": {
             "type": "ds.search",
-            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.cveId\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.cveId\" as cve_id, \"cveMetadata.datePublished\" as date_published\n| eval pub_time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where pub_time > relative_time(now(), \"-7d@d\")\n| lookup epss_lookup.csv cve_id OUTPUT epss_score\n| where tonumber(epss_score) > 0.5\n| stats dc(cve_id) as high_epss_count"}
+            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| eval pub_time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where pub_time > relative_time(now(), \"-7d@d\")\n| lookup epss_lookup.csv cve_id OUTPUT epss_score\n| where tonumber(epss_score) > 0.5\n| stats dc(cve_id) as high_epss_count"}
         },
         "ds_risk_table": {
             "type": "ds.search",
-            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| sort - epss_score\n| where ($epss_filter$) AND ($kev_filter$)\n| head 100\n| table cve_id cvss_score epss_score in_kev ssvc_exploitation"}
+            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| sort - epss_score\n| where ($epss_filter$) AND ($kev_filter$)\n| head 100\n| table cve_id cvss_score epss_score in_kev ssvc_exploitation\n| rename cve_id as \"CVE ID\", cvss_score as \"CVSS Score\", epss_score as \"EPSS Score\", in_kev as \"In KEV\", ssvc_exploitation as \"SSVC Exploitation\""}
         },
         "ds_epss_dist": {
             "type": "ds.search",
@@ -77,7 +77,8 @@
         "viz_epss_dist": {
             "type": "splunk.bar",
             "dataSources": {"primary": "ds_epss_dist"},
-            "title": "EPSS Score Distribution"
+            "title": "EPSS Score Distribution",
+            "options": {"xAxisTitleText": "EPSS Bucket", "yAxisTitleText": "CVE Count"}
         },
         "viz_risk_table": {
             "type": "splunk.table",

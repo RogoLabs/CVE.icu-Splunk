@@ -15,12 +15,12 @@ include_adp = <boolean>
 include_rejected = <boolean>
 * Optional. Include CVEs with REJECTED state.
 * Set to false to exclude rejected/withdrawn CVE records.
-* Default: true
+* Default: false
 
 batch_size = <number>
 * Optional. Number of CVE records to process per batch.
 * Larger batches are more efficient but use more memory.
 * Default: 500
 
-# NOTE: GitHub Personal Access Token is stored securely via the Setup page
-# and NOT in inputs.conf. See README for configuration instructions.
+# NOTE: GitHub Personal Access Token is stored securely via Splunk's
+# storage/passwords REST API. See README for configuration instructions.

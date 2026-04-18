@@ -47,7 +47,7 @@ class CveicuepsskevCommand(GeneratingCommand):
         epss_url = "https://epss.cyentia.com/epss_scores-current.csv.gz"
 
         request = urllib.request.Request(
-            epss_url, headers={"User-Agent": "CVE-ICU-Splunk/1.0"}
+            epss_url, headers={"User-Agent": "TA-cveicu/2.0.0"}
         )
 
         with urllib.request.urlopen(request, timeout=120) as response:
@@ -76,7 +76,7 @@ class CveicuepsskevCommand(GeneratingCommand):
         kev_url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
         request = urllib.request.Request(
-            kev_url, headers={"User-Agent": "CVE-ICU-Splunk/1.0"}
+            kev_url, headers={"User-Agent": "TA-cveicu/2.0.0"}
         )
 
         with urllib.request.urlopen(request, timeout=60) as response:

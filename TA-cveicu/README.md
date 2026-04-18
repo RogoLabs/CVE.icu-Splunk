@@ -266,7 +266,7 @@ Search and filter the full CVE database. Includes a publication sparkline (last 
 
 ### Risk Priority
 
-Risk-ranked CVE table combining CVSS, EPSS, KEV, and SSVC signals into a single risk priority score. Includes EPSS threshold and KEV-only filters, a high-risk trend chart, and single-value panels for KEV count and high-EPSS CVEs.
+Risk-ranked CVE table combining CVSS, EPSS, KEV, and SSVC signals. Filter by EPSS threshold or KEV-only to focus on the highest-risk vulnerabilities. Includes an EPSS score distribution chart and single-value panels for KEV count and high-EPSS CVEs.
 
 ### Vulnerability Landscape
 

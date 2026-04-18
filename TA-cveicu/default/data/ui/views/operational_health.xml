@@ -26,7 +26,7 @@
         },
         "ds_daily_volume": {
             "type": "ds.search",
-            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| spath cveMetadata.datePublished\n| rename \"cveMetadata.datePublished\" as date_published\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-7d@d\")\n| timechart span=1d count as events_per_day"}
+            "options": {"query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-7d@d\")\n| timechart span=1d count as events_per_day"}
         },
         "ds_internal_errors": {
             "type": "ds.search",

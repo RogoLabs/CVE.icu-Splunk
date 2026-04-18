@@ -46,9 +46,9 @@ Four new dashboards built with Dashboard Studio v2:
 - **Vulnerability Landscape** — Executive-level overview with eight panels
 - **Operational Health** — Technical diagnostics and enrichment status
 
-### EPSS/KEV Risk Priority Scoring
+### EPSS/KEV Enrichment
 
-Pre-computed risk priority scores combine CVSS base scores, EPSS exploit probability, CISA KEV status, and SSVC exploitation state into a single weighted score. Updated hourly via saved search.
+Pre-computed lookups combine CVSS base scores, EPSS exploit probability (from FIRST), CISA KEV status, and SSVC exploitation data. Updated automatically via saved searches. The Risk Priority dashboard lets you filter and sort by any of these signals.
 
 ### CI/CD Pipeline
 
