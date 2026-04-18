@@ -63,7 +63,11 @@ case "$MODE" in
     PACKAGE="TA-cveicu-${VERSION}.tar.gz"
 
     info "Building ${PACKAGE}..."
-    COPYFILE_DISABLE=1 tar -czf "$PACKAGE" --exclude='.*' TA-cveicu/
+    COPYFILE_DISABLE=1 tar -czf "$PACKAGE" \
+      --exclude='.*' \
+      --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
+      --exclude='local' --exclude='metadata/local.meta' \
+      TA-cveicu/
 
     if command -v splunk-appinspect &> /dev/null; then
       info "Running AppInspect precert validation..."

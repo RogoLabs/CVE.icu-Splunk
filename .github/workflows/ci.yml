@@ -38,7 +38,8 @@ jobs:
       - name: Build package
         run: |
           COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
-            --exclude='__pycache__' --exclude='*.pyc' \
+            --exclude='.*' \
+            --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
             --exclude='local' --exclude='metadata/local.meta' \
             TA-cveicu/
       - name: Run AppInspect
@@ -87,7 +88,8 @@ jobs:
       - name: Install add-on
         run: |
           COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
-            --exclude='__pycache__' --exclude='*.pyc' \
+            --exclude='.*' \
+            --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
             --exclude='local' --exclude='metadata/local.meta' \
             TA-cveicu/
           docker cp TA-cveicu.tar.gz splunk:/tmp/TA-cveicu.tar.gz
