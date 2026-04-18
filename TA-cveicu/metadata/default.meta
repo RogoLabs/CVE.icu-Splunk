@@ -30,9 +30,3 @@ access = read : [ * ], write : [ admin, sc_admin ]
 export = system
 owner = admin
 access = read : [ * ], write : [ admin, sc_admin ]
-
-# REST handlers
-[restmap]
-export = system
-owner = admin
-access = read : [ * ], write : [ admin, sc_admin ]

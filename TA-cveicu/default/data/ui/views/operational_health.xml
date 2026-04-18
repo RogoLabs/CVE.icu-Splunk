@@ -1,0 +1,74 @@
+<dashboard version="2">
+    <label>Operational Health</label>
+    <description>TA-cveicu add-on operational status and diagnostics</description>
+    <definition><![CDATA[
+{
+    "dataSources": {
+        "ds_last_run": {
+            "type": "ds.search",
+            "options": {
+                "query": "`cveicu_index` sourcetype=\"cveicu:audit\" earliest=-7d@d latest=now\n| sort - _time\n| head 1\n| eval last_run=strftime(_time, \"%Y-%m-%d %H:%M:%S\")\n| table last_run",
+                "queryParameters": {"earliest": "-7d@d", "latest": "now"}
+            }
+        },
+        "ds_error_count": {
+            "type": "ds.search",
+            "options": {
+                "query": "(index=_internal sourcetype=splunkd severity=ERROR (\"TA-cveicu\" OR \"cveicu\")) OR (`cveicu_index` sourcetype=\"cveicu:error\") earliest=-24h@h latest=now\n| stats count as error_count",
+                "queryParameters": {"earliest": "-24h@h", "latest": "now"}
+            }
+        },
+        "ds_events_ingested": {
+            "type": "ds.search",
+            "options": {"query": "| inputlookup cve_total.csv\n| table total_cves"}
+        },
+        "ds_checkpoint_state": {
+            "type": "ds.search",
+            "options": {
+                "query": "`cveicu_index` sourcetype=\"cveicu:audit\" earliest=-7d@d latest=now\n| sort - _time\n| head 5\n| spath message\n| table _time message",
+                "queryParameters": {"earliest": "-7d@d", "latest": "now"}
+            }
+        },
+        "ds_enrichment_freshness": {
+            "type": "ds.search",
+            "options": {"query": "| inputlookup epss_lookup.csv | stats count as epss_rows\n| appendcols [| inputlookup kev_lookup.csv | stats count as kev_rows]\n| appendcols [| inputlookup risk_priority_lookup.csv | stats count as risk_rows]\n| eval epss_rows=if(epss_rows=0, \"Pending\", epss_rows), kev_rows=if(kev_rows=0, \"Pending\", kev_rows), risk_rows=if(risk_rows=0, \"Pending\", risk_rows)\n| rename epss_rows as \"EPSS Entries\", kev_rows as \"KEV Entries\", risk_rows as \"Risk Priority Entries\"\n| table \"EPSS Entries\" \"KEV Entries\" \"Risk Priority Entries\""}
+        },
+        "ds_daily_volume": {
+            "type": "ds.search",
+            "options": {"query": "| inputlookup cve_daily_summary.csv\n| eval _time=strptime(date_published, \"%Y-%m-%d\")\n| where _time > relative_time(now(), \"-7d@d\")\n| timechart span=1d sum(cve_count) as events_per_day"}
+        },
+        "ds_internal_errors": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=_internal sourcetype=splunkd (severity=ERROR OR severity=WARN) (\"TA-cveicu\" OR \"cveicu\") earliest=-24h@h latest=now\n| table _time severity message\n| sort - _time\n| head 20",
+                "queryParameters": {"earliest": "-24h@h", "latest": "now"}
+            }
+        }
+    },
+    "layout": {
+        "type": "grid",
+        "options": {"width": 1440},
+        "structure": [
+            {"item": "viz_last_run", "type": "block", "position": {"x": 0, "y": 0, "w": 480, "h": 120}},
+            {"item": "viz_events_ingested", "type": "block", "position": {"x": 480, "y": 0, "w": 480, "h": 120}},
+            {"item": "viz_error_count", "type": "block", "position": {"x": 960, "y": 0, "w": 480, "h": 120}},
+            {"item": "viz_enrichment", "type": "block", "position": {"x": 0, "y": 120, "w": 720, "h": 200}},
+            {"item": "viz_checkpoint", "type": "block", "position": {"x": 720, "y": 120, "w": 720, "h": 200}},
+            {"item": "viz_daily_volume", "type": "block", "position": {"x": 0, "y": 320, "w": 1440, "h": 250}},
+            {"item": "viz_errors_table", "type": "block", "position": {"x": 0, "y": 570, "w": 1440, "h": 300}}
+        ]
+    },
+    "visualizations": {
+        "viz_last_run": {"type": "splunk.singlevalue", "dataSources": {"primary": "ds_last_run"}, "title": "Last Successful Run"},
+        "viz_events_ingested": {"type": "splunk.singlevalue", "dataSources": {"primary": "ds_events_ingested"}, "title": "Total CVE Records"},
+        "viz_error_count": {"type": "splunk.singlevalue", "dataSources": {"primary": "ds_error_count"}, "title": "Errors (Last 24h)", "options": {"majorColor": "#dc4e41"}},
+        "viz_enrichment": {"type": "splunk.table", "dataSources": {"primary": "ds_enrichment_freshness"}, "title": "Enrichment Lookup Sizes"},
+        "viz_checkpoint": {"type": "splunk.table", "dataSources": {"primary": "ds_checkpoint_state"}, "title": "Recent Audit Events"},
+        "viz_daily_volume": {"type": "splunk.column", "dataSources": {"primary": "ds_daily_volume"}, "title": "CVEs Published Per Day (Last 7 Days)"},
+        "viz_errors_table": {"type": "splunk.table", "dataSources": {"primary": "ds_internal_errors"}, "title": "Recent Errors and Warnings"}
+    },
+    "title": "Operational Health",
+    "description": "TA-cveicu add-on operational status and diagnostics"
+}
+    ]]></definition>
+</dashboard>

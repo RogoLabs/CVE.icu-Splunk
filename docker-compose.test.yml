@@ -8,6 +8,7 @@ services:
       SPLUNK_PASSWORD: "testpassword123"
     ports:
       - "18089:8089"
+      - "18000:8000"
     volumes:
       - ./TA-cveicu:/opt/splunk/etc/apps/TA-cveicu
     healthcheck:

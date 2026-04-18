@@ -1,0 +1,81 @@
+<dashboard version="2">
+    <label>CVE Explorer</label>
+    <description>Search and filter CVE records from the CVE List V5 database</description>
+    <definition><![CDATA[
+{
+    "dataSources": {
+        "ds_cve_search": {
+            "type": "ds.search",
+            "options": {
+                "query": "`cveicu_index` sourcetype=\"cveicu:record\" state=\"PUBLISHED\"\n| eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, \"NONE\")\n| search affected_vendor=\"$vendor_filter$\" $severity_filter$ cwe_id=\"$cwe_filter$\"\n| head 1000\n| table cve_id title affected_vendor affected_product cvss_score severity cwe_id date_published\n| rename cve_id as \"CVE ID\", title as \"Title\", affected_vendor as \"Vendor\", affected_product as \"Product\", cvss_score as \"CVSS\", severity as \"Severity\", cwe_id as \"CWE\", date_published as \"Published\"\n| sort - Published",
+                "queryParameters": {"earliest": "0", "latest": "now"}
+            }
+        },
+        "ds_publish_sparkline": {
+            "type": "ds.search",
+            "options": {
+                "query": "| inputlookup cve_daily_summary.csv\n| eval _time=strptime(date_published, \"%Y-%m-%d\")\n| where _time > relative_time(now(), \"-30d@d\")\n| stats sum(cve_count) as count by date_published\n| eval _time=strptime(date_published, \"%Y-%m-%d\")\n| timechart span=1d sum(count) as count"
+            }
+        }
+    },
+    "inputs": {
+        "input_vendor": {
+            "type": "input.text",
+            "options": {
+                "token": "vendor_filter",
+                "defaultValue": "*"
+            },
+            "title": "Vendor"
+        },
+        "input_severity": {
+            "type": "input.dropdown",
+            "options": {
+                "token": "severity_filter",
+                "defaultValue": "*",
+                "items": [
+                    {"label": "All", "value": "*"},
+                    {"label": "Critical", "value": "severity=CRITICAL"},
+                    {"label": "High", "value": "severity=HIGH"},
+                    {"label": "Medium", "value": "severity=MEDIUM"},
+                    {"label": "Low", "value": "severity=LOW"}
+                ]
+            },
+            "title": "Severity"
+        },
+        "input_cwe": {
+            "type": "input.text",
+            "options": {
+                "token": "cwe_filter",
+                "defaultValue": "*"
+            },
+            "title": "CWE ID"
+        }
+    },
+    "layout": {
+        "type": "grid",
+        "options": {"width": 1440},
+        "structure": [
+            {"item": "viz_publish_sparkline", "type": "block", "position": {"x": 0, "y": 0, "w": 1440, "h": 200}},
+            {"item": "viz_cve_table", "type": "block", "position": {"x": 0, "y": 200, "w": 1440, "h": 600}}
+        ],
+        "globalInputs": ["input_vendor", "input_severity", "input_cwe"]
+    },
+    "visualizations": {
+        "viz_publish_sparkline": {
+            "type": "splunk.line",
+            "dataSources": {"primary": "ds_publish_sparkline"},
+            "title": "CVEs Published Per Day (Last 30 Days)",
+            "options": {"xAxisTitleText": "Date", "yAxisTitleText": "CVEs Published"}
+        },
+        "viz_cve_table": {
+            "type": "splunk.table",
+            "dataSources": {"primary": "ds_cve_search"},
+            "title": "CVE Records (showing up to 1000 results)",
+            "options": {"count": 20}
+        }
+    },
+    "title": "CVE Explorer",
+    "description": "Search and filter CVE records from the CVE List V5 database"
+}
+    ]]></definition>
+</dashboard>

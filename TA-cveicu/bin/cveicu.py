@@ -6,33 +6,19 @@ Ingests CVE V5 records from the GitHub CVEProject/cvelistV5 repository
 using release ZIP files for efficient bulk and delta downloads.
 """
 
-import os
 import sys
-import json
-import time
-import traceback
-from datetime import datetime
-from typing import Optional
 
-# Add lib path for bundled packages
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
-sys.path.insert(0, os.path.dirname(__file__))
-
-# Early --scheme handler: Splunk calls this during startup to register the
-# modular input. If ANY import below fails (splunklib, requests, SSL libs),
-# the script exits with code 1 and the data input never appears. By handling
-# --scheme here, before heavy imports, registration always succeeds.
+# Handle --scheme before ANY other imports. Splunk calls this at startup
+# to register the modular input. If this fails, the input silently
+# disappears from the UI with no user-facing error. Only `sys` is needed
+# here — it is a builtin module that cannot fail to import.
 if __name__ == "__main__" and "--scheme" in sys.argv:
-    try:
-        from splunklib.modularinput import Script, Scheme, Argument
-    except Exception:
-        # splunklib unavailable — emit scheme XML directly and exit
-        sys.stdout.write("""<scheme>
+    sys.stdout.write("""<scheme>
     <title>cve.icu</title>
     <description>Ingests CVE V5 records from the CVEProject/cvelistV5 GitHub repository. Downloads baseline and delta ZIP files for efficient bulk processing.</description>
     <use_external_validation>false</use_external_validation>
-    <streaming_mode>xml</streaming_mode>
     <use_single_instance>false</use_single_instance>
+    <streaming_mode>xml</streaming_mode>
     <endpoint>
         <args>
             <arg name="include_adp">
@@ -59,23 +45,35 @@ if __name__ == "__main__" and "--scheme" in sys.argv:
         </args>
     </endpoint>
 </scheme>""")
-        sys.exit(0)
+    sys.stdout.flush()
+    sys.exit(0)
+
+import os
+import json
+import time
+import traceback
+from datetime import datetime, timezone
+from typing import Optional
+
+# Add lib path for bundled packages
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
+sys.path.insert(0, os.path.dirname(__file__))
 
 try:
     from splunklib.modularinput import Script, Scheme, Argument, Event, EventWriter
-except ImportError:
-    Script = object
-    Scheme = None
-    Argument = None
-    Event = None
-    EventWriter = None
-
-from cveicu_lib.logging_config import setup_logging, get_logger
-from cveicu_lib.credential_manager import CredentialManager
-from cveicu_lib.github_client import GitHubClient
-from cveicu_lib.checkpoint_manager import CheckpointManager
-from cveicu_lib.cve_processor import CVEProcessor
-from cveicu_lib.resource_manager import ResourceManager, TimeoutManager
+    from cveicu_lib.logging_config import setup_logging, get_logger
+    from cveicu_lib.credential_manager import CredentialManager
+    from cveicu_lib.github_client import GitHubClient
+    from cveicu_lib.checkpoint_manager import CheckpointManager
+    from cveicu_lib.cve_processor import CVEProcessor
+    from cveicu_lib.resource_manager import ResourceManager, TimeoutManager
+except (ImportError, OSError) as e:
+    sys.stderr.write(
+        f"ERROR TA-cveicu: Failed to import required libraries: {type(e).__name__}: {e}\n"
+        f"ERROR TA-cveicu: Python: {sys.executable} {sys.version}\n"
+        f"ERROR TA-cveicu: sys.path: {sys.path}\n"
+    )
+    sys.exit(1)
 
 
 class CVEListV5Input(Script):
@@ -224,9 +222,10 @@ class CVEListV5Input(Script):
         """
         # Extract configuration
         index = input_config.get("index", "main")
+        self._current_index = index
         include_adp = self._str_to_bool(input_config.get("include_adp", "true"))
         include_rejected = self._str_to_bool(
-            input_config.get("include_rejected", "true")
+            input_config.get("include_rejected", "false")
         )
         batch_size = int(input_config.get("batch_size", "500"))
 
@@ -238,6 +237,7 @@ class CVEListV5Input(Script):
         # Initialize resource management
         self.resource_manager = ResourceManager(max_memory_mb=512, logger=self.logger)
         self.timeout_manager = TimeoutManager(timeout_seconds=3600, logger=self.logger)
+        self.timeout_manager.start()
 
         # Write audit event for start
         self._write_audit_event(ew, "Input started", input_name, index)
@@ -463,7 +463,7 @@ class CVEListV5Input(Script):
             ew: EventWriter for writing events
         """
         checkpoint = checkpoint_manager.get_checkpoint()
-        last_release = checkpoint.get("last_release")
+        last_release = checkpoint.get("last_release_tag")
 
         # Find delta releases since last checkpoint
         deltas = github_client.find_delta_releases_since(last_release)
@@ -572,12 +572,13 @@ class CVEListV5Input(Script):
             event = Event()
             event.stanza = context
             event.sourceType = "cveicu:error"
+            event.index = getattr(self, "_current_index", "main")
             event.data = json.dumps(
                 {
                     "level": "ERROR",
                     "message": message,
                     "context": context,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
             ew.write_event(event)
@@ -599,7 +600,7 @@ class CVEListV5Input(Script):
                     "level": "INFO",
                     "message": message,
                     "input_name": input_name,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
             ew.write_event(event)

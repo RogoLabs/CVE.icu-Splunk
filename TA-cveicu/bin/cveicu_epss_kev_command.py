@@ -46,27 +46,31 @@ class CveicuepsskevCommand(GeneratingCommand):
 
         epss_url = "https://epss.cyentia.com/epss_scores-current.csv.gz"
 
-        request = urllib.request.Request(
-            epss_url, headers={"User-Agent": "CVE-ICU-Splunk/1.0"}
-        )
+        try:
+            request = urllib.request.Request(
+                epss_url, headers={"User-Agent": "TA-cveicu/2.0.0"}
+            )
 
-        with urllib.request.urlopen(request, timeout=120) as response:
-            compressed_data = response.read()
+            with urllib.request.urlopen(request, timeout=120) as response:
+                compressed_data = response.read()
 
-        decompressed_data = gzip.decompress(compressed_data).decode("utf-8")
+            decompressed_data = gzip.decompress(compressed_data).decode("utf-8")
 
-        lines = decompressed_data.strip().split("\n")
-        data_lines = [l for l in lines if not l.startswith("#")]
-        reader = csv.DictReader(data_lines)
+            lines = decompressed_data.strip().split("\n")
+            data_lines = [l for l in lines if not l.startswith("#")]
+            reader = csv.DictReader(data_lines)
 
-        for row in reader:
-            cve = row.get("cve", "")
-            if cve.startswith("CVE-"):
-                yield {
-                    "cve_id": cve,
-                    "epss_score": row.get("epss", "0"),
-                    "epss_percentile": row.get("percentile", "0"),
-                }
+            for row in reader:
+                cve = row.get("cve", "")
+                if cve.startswith("CVE-"):
+                    yield {
+                        "cve_id": cve,
+                        "epss_score": row.get("epss", "0"),
+                        "epss_percentile": row.get("percentile", "0"),
+                    }
+        except Exception as e:
+            self.logger.error("Failed to fetch EPSS scores: %s", str(e))
+            yield {"_raw": f"ERROR: Failed to fetch EPSS data: {e}"}
 
     def _fetch_kev(self):
         """Fetch CISA KEV catalog and yield rows"""
@@ -75,25 +79,29 @@ class CveicuepsskevCommand(GeneratingCommand):
 
         kev_url = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
-        request = urllib.request.Request(
-            kev_url, headers={"User-Agent": "CVE-ICU-Splunk/1.0"}
-        )
+        try:
+            request = urllib.request.Request(
+                kev_url, headers={"User-Agent": "TA-cveicu/2.0.0"}
+            )
 
-        with urllib.request.urlopen(request, timeout=60) as response:
-            kev_data = json.loads(response.read().decode("utf-8"))
+            with urllib.request.urlopen(request, timeout=60) as response:
+                kev_data = json.loads(response.read().decode("utf-8"))
 
-        for vuln in kev_data.get("vulnerabilities", []):
-            yield {
-                "cve_id": vuln.get("cveID", ""),
-                "kev_vendor": vuln.get("vendorProject", ""),
-                "kev_product": vuln.get("product", ""),
-                "kev_vulnerability_name": vuln.get("vulnerabilityName", ""),
-                "kev_date_added": vuln.get("dateAdded", ""),
-                "kev_due_date": vuln.get("dueDate", ""),
-                "kev_required_action": vuln.get("requiredAction", ""),
-                "kev_ransomware": vuln.get("knownRansomwareCampaignUse", "Unknown"),
-                "in_kev": "true",
-            }
+            for vuln in kev_data.get("vulnerabilities", []):
+                yield {
+                    "cve_id": vuln.get("cveID", ""),
+                    "kev_vendor": vuln.get("vendorProject", ""),
+                    "kev_product": vuln.get("product", ""),
+                    "kev_vulnerability_name": vuln.get("vulnerabilityName", ""),
+                    "kev_date_added": vuln.get("dateAdded", ""),
+                    "kev_due_date": vuln.get("dueDate", ""),
+                    "kev_required_action": vuln.get("requiredAction", ""),
+                    "kev_ransomware": vuln.get("knownRansomwareCampaignUse", "Unknown"),
+                    "in_kev": "true",
+                }
+        except Exception as e:
+            self.logger.error("Failed to fetch KEV catalog: %s", str(e))
+            yield {"_raw": f"ERROR: Failed to fetch KEV data: {e}"}
 
 
 if __name__ == "__main__":

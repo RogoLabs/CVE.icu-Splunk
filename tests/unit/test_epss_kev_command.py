@@ -5,7 +5,11 @@ import io
 import json
 import pytest
 from unittest.mock import patch, MagicMock
-from cveicu_epss_kev_command import CveicuepsskevCommand
+
+try:
+    from cveicu_epss_kev_command import CveicuepsskevCommand
+except (ImportError, ModuleNotFoundError) as e:
+    pytest.skip(f"splunklib not available: {e}", allow_module_level=True)
 
 
 @pytest.fixture

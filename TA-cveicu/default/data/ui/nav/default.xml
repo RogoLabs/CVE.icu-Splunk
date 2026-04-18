@@ -1,6 +1,7 @@
 <nav search_view="search" color="#C0392B">
-    <view name="cve_dashboard_instant" default="true" label="CVE Dashboard" />
-    <view name="cve_intelligence" label="Vulnerability Intelligence" />
-    <view name="setup_page_dashboard" label="Configuration" />
+    <view name="cve_explorer" default="true" label="CVE Explorer" />
+    <view name="risk_priority" label="Risk Priority" />
+    <view name="vulnerability_landscape" label="Vulnerability Landscape" />
+    <view name="operational_health" label="Operational Health" />
     <view name="search" label="Search" />
 </nav>

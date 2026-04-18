@@ -82,7 +82,7 @@ class GitHubClient:
         # Set headers
         headers = {
             "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "TA-cveicu/1.0.6 Splunk-Addon",
+            "User-Agent": "TA-cveicu/2.0.0 Splunk-Addon",
         }
 
         if self.github_token:
@@ -110,7 +110,7 @@ class GitHubClient:
         stream: bool = False,
         timeout: Optional[int] = None,
         **kwargs,
-    ) -> requests.Response:
+    ) -> "requests.Response":
         """
         Make an HTTP request with rate limit handling.
 
