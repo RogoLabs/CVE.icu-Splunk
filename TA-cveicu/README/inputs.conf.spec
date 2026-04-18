@@ -7,6 +7,10 @@
 
 # Note: 'index' is a standard Splunk parameter and handled internally
 
+interval = <number>
+* Required. How often to run the input, in seconds.
+* Default: 3600
+
 include_adp = <boolean>
 * Optional. Include ADP (Authorized Data Publisher) container data.
 * ADP containers include CISA-ADP enrichment and CVE Program Container data.
