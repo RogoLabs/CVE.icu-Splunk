@@ -10,7 +10,7 @@
 #   ./test.sh package      Build package and run AppInspect
 #
 # Requirements:
-#   - Python 3.7+ with pytest: pip install -r requirements-dev.txt
+#   - Python 3.11+ with pytest: pip install -r requirements-dev.txt
 #   - Docker (for integration/live tests)
 #   - splunk-appinspect (for package test): pip install splunk-appinspect
 

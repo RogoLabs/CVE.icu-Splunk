@@ -1,4 +1,11 @@
 
+# macOS
+.DS_Store
+
+# Splunk local overrides (user/instance-specific)
+TA-cveicu/local/
+TA-cveicu/metadata/local.meta
+
 # Splunk packages
 *.tar.gz
 *.spl
@@ -6,8 +13,14 @@
 # Claude Code
 .claude/
 
+# Internal planning docs
+docs/superpowers/
+
 # Node.js (Playwright screenshot script)
 scripts/node_modules/
+
+# Debug logs
+log_output.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
