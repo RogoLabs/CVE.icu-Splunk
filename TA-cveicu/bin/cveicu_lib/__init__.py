@@ -5,7 +5,7 @@ Core modules for CVE List V5 ingestion from GitHub.
 """
 
 __version__ = "2.0.0"
-__author__ = "Your Organization"
+__author__ = "cve.icu"
 
 from .logging_config import setup_logging
 from .credential_manager import CredentialManager

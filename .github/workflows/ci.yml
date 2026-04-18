@@ -38,7 +38,9 @@ jobs:
       - name: Build package
         run: |
           COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
-            --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
+            --exclude='__pycache__' --exclude='*.pyc' \
+            --exclude='local' --exclude='metadata/local.meta' \
+            TA-cveicu/
       - name: Run AppInspect
         run: splunk-appinspect inspect TA-cveicu.tar.gz --mode precert
       - name: Upload package artifact
@@ -85,7 +87,9 @@ jobs:
       - name: Install add-on
         run: |
           COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
-            --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
+            --exclude='__pycache__' --exclude='*.pyc' \
+            --exclude='local' --exclude='metadata/local.meta' \
+            TA-cveicu/
           docker cp TA-cveicu.tar.gz splunk:/tmp/TA-cveicu.tar.gz
           docker exec -u root splunk bash -c 'cd /opt/splunk/etc/apps && tar xzf /tmp/TA-cveicu.tar.gz && chown -R splunk:splunk TA-cveicu && chmod +x TA-cveicu/bin/*.py'
           echo "=== Verifying install ==="

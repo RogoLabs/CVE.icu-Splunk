@@ -1,39 +1,299 @@
 cwe_id,cwe_name,cwe_description
-CWE-79,Improper Neutralization of Input During Web Page Generation,Cross-site Scripting (XSS)
-CWE-89,Improper Neutralization of Special Elements used in an SQL Command,SQL Injection
-CWE-78,Improper Neutralization of Special Elements used in an OS Command,OS Command Injection
-CWE-20,Improper Input Validation,Input Validation
-CWE-22,Improper Limitation of a Pathname to a Restricted Directory,Path Traversal
-CWE-125,Out-of-bounds Read,Memory Safety
-CWE-787,Out-of-bounds Write,Memory Safety
-CWE-416,Use After Free,Memory Safety
-CWE-476,NULL Pointer Dereference,Memory Safety
-CWE-190,Integer Overflow or Wraparound,Integer Handling
-CWE-119,Improper Restriction of Operations within the Bounds of a Memory Buffer,Buffer Overflow
-CWE-94,Improper Control of Generation of Code,Code Injection
-CWE-269,Improper Privilege Management,Privilege Escalation
-CWE-352,Cross-Site Request Forgery (CSRF),CSRF
-CWE-287,Improper Authentication,Authentication Bypass
-CWE-434,Unrestricted Upload of File with Dangerous Type,File Upload
-CWE-918,Server-Side Request Forgery (SSRF),SSRF
-CWE-502,Deserialization of Untrusted Data,Deserialization
-CWE-77,Improper Neutralization of Special Elements used in a Command,Command Injection
-CWE-400,Uncontrolled Resource Consumption,DoS
-CWE-200,Exposure of Sensitive Information to an Unauthorized Actor,Information Disclosure
-CWE-306,Missing Authentication for Critical Function,Authentication
-CWE-862,Missing Authorization,Authorization
-CWE-863,Incorrect Authorization,Authorization
-CWE-120,Buffer Copy without Checking Size of Input,Buffer Overflow
-CWE-122,Heap-based Buffer Overflow,Buffer Overflow
-CWE-121,Stack-based Buffer Overflow,Buffer Overflow
-CWE-835,Loop with Unreachable Exit Condition,Infinite Loop
-CWE-798,Use of Hard-coded Credentials,Hardcoded Credentials
 CWE-noinfo,No CWE Information Available,Unknown
-CWE-78,Improper Neutralization of Special Elements used in an OS Command,OS Command Injection
+CWE-16,Configuration,Configuration Error
+CWE-17,DEPRECATED: Code,Code Quality
+CWE-18,DEPRECATED: Source Code,Source Code Issue
+CWE-19,Data Processing Errors,Data Processing
 CWE-20,Improper Input Validation,Input Validation
 CWE-22,Improper Limitation of a Pathname to a Restricted Directory,Path Traversal
-CWE-125,Out-of-bounds Read,Memory Safety
-CWE-787,Out-of-bounds Write,Memory Safety
-CWE-416,Use After Free,Memory Safety
-CWE-476,NULL Pointer Dereference,Memory Safety
-CWE-190,Integer Overflow or Wraparound,Integer Handling
+CWE-23,Relative Path Traversal,Path Traversal
+CWE-24,Path Traversal: '../filedir',Path Traversal
+CWE-25,Path Traversal: '/../filedir',Path Traversal
+CWE-26,Path Traversal: '/dir/../filename',Path Traversal
+CWE-27,Path Traversal: 'dir/../../filename',Path Traversal
+CWE-29,Path Traversal: '\..\filename',Path Traversal
+CWE-35,Path Traversal: '.../...//',Path Traversal
+CWE-36,Absolute Path Traversal,Path Traversal
+CWE-59,Improper Link Resolution Before File Access,Symlink Following
+CWE-61,UNIX Symbolic Link (Symlink) Following,Symlink Following
+CWE-74,Improper Neutralization of Special Elements in Output Used by a Downstream Component,Injection
+CWE-75,Failure to Sanitize Special Elements into a Different Plane,Input Sanitization
+CWE-77,Improper Neutralization of Special Elements used in a Command,Command Injection
+CWE-78,Improper Neutralization of Special Elements used in an OS Command,OS Command Injection
+CWE-79,Improper Neutralization of Input During Web Page Generation,Cross-site Scripting
+CWE-80,Improper Neutralization of Script-Related HTML Tags in a Web Page,XSS Basic
+CWE-87,Improper Neutralization of Alternate XSS Syntax,XSS Alternate Syntax
+CWE-88,Improper Neutralization of Argument Delimiters in a Command,Argument Injection
+CWE-89,Improper Neutralization of Special Elements used in an SQL Command,SQL Injection
+CWE-90,Improper Neutralization of Special Elements used in an LDAP Query,LDAP Injection
+CWE-91,XML Injection,XML Injection
+CWE-93,Improper Neutralization of CRLF Sequences,CRLF Injection
+CWE-94,Improper Control of Generation of Code,Code Injection
+CWE-95,Improper Neutralization of Directives in Dynamically Evaluated Code,Eval Injection
+CWE-96,Improper Neutralization of Directives in Statically Saved Code,Static Code Injection
+CWE-98,Improper Control of Filename for Include/Require Statement in PHP Program,PHP File Inclusion
+CWE-99,Improper Control of Resource Identifiers,Resource Injection
+CWE-100,DEPRECATED: Technology-Specific Input Validation Problems,Input Validation
+CWE-113,Improper Neutralization of CRLF Sequences in HTTP Headers,HTTP Splitting
+CWE-116,Improper Encoding or Escaping of Output,Output Encoding
+CWE-117,Improper Output Neutralization for Logs,Log Injection
+CWE-119,Improper Restriction of Operations within the Bounds of a Memory Buffer,Buffer Overflow
+CWE-120,Buffer Copy without Checking Size of Input,Buffer Overflow
+CWE-121,Stack-based Buffer Overflow,Stack Overflow
+CWE-122,Heap-based Buffer Overflow,Heap Overflow
+CWE-123,Write-what-where Condition,Memory Corruption
+CWE-124,Buffer Underwrite,Buffer Underwrite
+CWE-125,Out-of-bounds Read,Out-of-Bounds Read
+CWE-126,Buffer Over-read,Buffer Over-read
+CWE-127,Buffer Under-read,Buffer Under-read
+CWE-128,Wrap-around Error,Wrap-around Error
+CWE-129,Improper Validation of Array Index,Array Index
+CWE-130,Improper Handling of Length Parameter Inconsistency,Length Handling
+CWE-131,Incorrect Calculation of Buffer Size,Buffer Size
+CWE-134,Use of Externally-Controlled Format String,Format String
+CWE-135,Incorrect Calculation of Multi-Byte String Length,String Length
+CWE-138,Improper Neutralization of Special Elements,Special Elements
+CWE-170,Improper Null Termination,Null Termination
+CWE-172,Encoding Error,Encoding Error
+CWE-176,Improper Handling of Unicode Encoding,Unicode Handling
+CWE-178,Improper Handling of Case Sensitivity,Case Sensitivity
+CWE-183,Permissive List of Allowed Inputs,Permissive Allowlist
+CWE-184,Incomplete List of Disallowed Inputs,Incomplete Denylist
+CWE-185,Incorrect Regular Expression,Regex Error
+CWE-187,Partial String Comparison,String Comparison
+CWE-189,Numeric Errors,Numeric Error
+CWE-190,Integer Overflow or Wraparound,Integer Overflow
+CWE-191,Integer Underflow,Integer Underflow
+CWE-193,Off-by-one Error,Off-by-one
+CWE-194,Unexpected Sign Extension,Sign Extension
+CWE-195,Signed to Unsigned Conversion Error,Type Conversion
+CWE-196,Unsigned to Signed Conversion Error,Type Conversion
+CWE-197,Numeric Truncation Error,Numeric Truncation
+CWE-200,Exposure of Sensitive Information to an Unauthorized Actor,Information Disclosure
+CWE-201,Insertion of Sensitive Information Into Sent Data,Data Exposure
+CWE-203,Observable Discrepancy,Side Channel
+CWE-204,Observable Response Discrepancy,Response Discrepancy
+CWE-208,Observable Timing Discrepancy,Timing Attack
+CWE-209,Generation of Error Message Containing Sensitive Information,Error Message Leak
+CWE-210,Self-generated Error Message Containing Sensitive Information,Error Message Leak
+CWE-212,Improper Removal of Sensitive Information Before Storage or Transfer,Data Retention
+CWE-213,Exposure of Sensitive Information Due to Incompatible Policies,Policy Mismatch
+CWE-214,Invocation of Process Using Visible Sensitive Information,Visible Credentials
+CWE-215,Insertion of Sensitive Information Into Debugging Code,Debug Info Leak
+CWE-220,Storage of File With Sensitive Data Under FTP Root,Sensitive File Storage
+CWE-226,Sensitive Information in Resource Not Removed Before Reuse,Data Remnant
+CWE-252,Unchecked Return Value,Unchecked Return
+CWE-254,7PK - Security Features,Security Feature
+CWE-255,Credentials Management Errors,Credential Management
+CWE-256,Plaintext Storage of a Password,Plaintext Password
+CWE-259,Use of Hard-coded Password,Hardcoded Password
+CWE-261,Weak Encoding for Password,Weak Encoding
+CWE-264,Permissions Privileges and Access Controls,Access Control
+CWE-266,Incorrect Privilege Assignment,Privilege Assignment
+CWE-267,Privilege Defined With Unsafe Actions,Unsafe Privileges
+CWE-269,Improper Privilege Management,Privilege Escalation
+CWE-270,Privilege Context Switching Error,Privilege Switching
+CWE-271,Privilege Dropping / Lowering Errors,Privilege Dropping
+CWE-272,Least Privilege Violation,Least Privilege
+CWE-274,Improper Handling of Insufficient Privileges,Privilege Handling
+CWE-276,Incorrect Default Permissions,Default Permissions
+CWE-277,Insecure Inherited Permissions,Inherited Permissions
+CWE-278,Insecure Preserved Inherited Permissions,Preserved Permissions
+CWE-280,Improper Handling of Insufficient Permissions or Privileges,Permission Handling
+CWE-281,Improper Preservation of Permissions,Permission Preservation
+CWE-282,Improper Ownership Management,Ownership Management
+CWE-284,Improper Access Control,Access Control
+CWE-285,Improper Authorization,Authorization
+CWE-286,Incorrect User Management,User Management
+CWE-287,Improper Authentication,Authentication Bypass
+CWE-288,Authentication Bypass Using an Alternate Path or Channel,Auth Bypass Alternate
+CWE-289,Authentication Bypass by Alternate Name,Auth Bypass Name
+CWE-290,Authentication Bypass by Spoofing,Auth Bypass Spoofing
+CWE-291,Reliance on IP Address for Authentication,IP Auth Bypass
+CWE-294,Authentication Bypass by Capture-replay,Replay Attack
+CWE-295,Improper Certificate Validation,Certificate Validation
+CWE-296,Improper Following of a Certificate's Chain of Trust,Certificate Chain
+CWE-297,Improper Validation of Certificate with Host Mismatch,Host Mismatch
+CWE-300,Channel Accessible by Non-Endpoint,Man-in-the-Middle
+CWE-301,Reflection Attack in an Authentication Protocol,Reflection Attack
+CWE-302,Authentication Bypass by Assumed-Immutable Data,Auth Bypass Data
+CWE-303,Incorrect Implementation of Authentication Algorithm,Auth Implementation
+CWE-304,Missing Critical Step in Authentication,Auth Missing Step
+CWE-306,Missing Authentication for Critical Function,Missing Authentication
+CWE-307,Improper Restriction of Excessive Authentication Attempts,Brute Force
+CWE-310,Cryptographic Issues,Cryptographic Issue
+CWE-311,Missing Encryption of Sensitive Data,Missing Encryption
+CWE-312,Cleartext Storage of Sensitive Information,Cleartext Storage
+CWE-313,Cleartext Storage in a File or on Disk,Cleartext File Storage
+CWE-315,Cleartext Storage of Sensitive Information in a Cookie,Cleartext Cookie
+CWE-316,Cleartext Storage of Sensitive Information in Memory,Cleartext Memory
+CWE-319,Cleartext Transmission of Sensitive Information,Cleartext Transmission
+CWE-320,DEPRECATED: Key Management Errors,Key Management
+CWE-321,Use of Hard-coded Cryptographic Key,Hardcoded Crypto Key
+CWE-322,Key Exchange without Entity Authentication,Key Exchange
+CWE-326,Inadequate Encryption Strength,Weak Encryption
+CWE-327,Use of a Broken or Risky Cryptographic Algorithm,Weak Crypto Algorithm
+CWE-328,Use of Weak Hash,Weak Hash
+CWE-330,Use of Insufficiently Random Values,Weak Randomness
+CWE-331,Insufficient Entropy,Insufficient Entropy
+CWE-332,Insufficient Entropy in PRNG,Weak PRNG
+CWE-338,Use of Cryptographically Weak Pseudo-Random Number Generator,Weak PRNG
+CWE-345,Insufficient Verification of Data Authenticity,Data Authenticity
+CWE-346,Origin Validation Error,Origin Validation
+CWE-347,Improper Verification of Cryptographic Signature,Signature Verification
+CWE-352,Cross-Site Request Forgery (CSRF),CSRF
+CWE-354,Improper Validation of Integrity Check Value,Integrity Check
+CWE-358,Improperly Implemented Security Check for Standard,Security Check
+CWE-359,Exposure of Private Personal Information to an Unauthorized Actor,Privacy Violation
+CWE-362,Concurrent Execution using Shared Resource with Improper Synchronization,Race Condition
+CWE-367,Time-of-check Time-of-use (TOCTOU) Race Condition,TOCTOU
+CWE-369,Divide By Zero,Divide By Zero
+CWE-370,Missing Check for Certificate Revocation after Initial Check,Certificate Revocation
+CWE-377,Insecure Temporary File,Insecure Temp File
+CWE-384,Session Fixation,Session Fixation
+CWE-385,Covert Timing Channel,Timing Channel
+CWE-388,7PK - Errors,Error Handling
+CWE-391,Unchecked Error Condition,Unchecked Error
+CWE-399,Resource Management Errors,Resource Management
+CWE-400,Uncontrolled Resource Consumption,Denial of Service
+CWE-401,Missing Release of Memory after Effective Lifetime,Memory Leak
+CWE-402,Transmission of Private Resources into a New Sphere,Resource Leak
+CWE-404,Improper Resource Shutdown or Release,Resource Release
+CWE-405,Asymmetric Resource Consumption,Asymmetric DoS
+CWE-406,Insufficient Control of Network Message Volume,Network Flood
+CWE-407,Inefficient Algorithmic Complexity,Algorithmic Complexity
+CWE-415,Double Free,Double Free
+CWE-416,Use After Free,Use After Free
+CWE-417,Communication Channel Errors,Channel Error
+CWE-420,Unprotected Alternate Channel,Unprotected Channel
+CWE-425,Direct Request (Forced Browsing),Forced Browsing
+CWE-426,Untrusted Search Path,Search Path
+CWE-427,Uncontrolled Search Path Element,DLL Hijacking
+CWE-428,Unquoted Search Path or Element,Unquoted Path
+CWE-434,Unrestricted Upload of File with Dangerous Type,File Upload
+CWE-436,Interpretation Conflict,Interpretation Conflict
+CWE-444,Inconsistent Interpretation of HTTP Requests,HTTP Smuggling
+CWE-451,User Interface (UI) Misrepresentation of Critical Information,UI Misrepresentation
+CWE-459,Incomplete Cleanup,Incomplete Cleanup
+CWE-460,Improper Cleanup on Thrown Exception,Exception Cleanup
+CWE-470,Use of Externally-Controlled Input to Select Classes or Code,Unsafe Reflection
+CWE-471,Modification of Assumed-Immutable Data (MAID),Data Tampering
+CWE-472,External Control of Assumed-Immutable Web Parameter,Parameter Tampering
+CWE-476,NULL Pointer Dereference,Null Dereference
+CWE-494,Download of Code Without Integrity Check,Code Download
+CWE-497,Exposure of Sensitive System Information to an Unauthorized Control Sphere,System Info Leak
+CWE-502,Deserialization of Untrusted Data,Deserialization
+CWE-506,Embedded Malicious Code,Malicious Code
+CWE-522,Insufficiently Protected Credentials,Weak Credentials
+CWE-532,Insertion of Sensitive Information into Log File,Log Info Leak
+CWE-538,Insertion of Sensitive Information into Externally-Accessible File or Directory,File Info Leak
+CWE-539,Use of Persistent Cookies Containing Sensitive Information,Sensitive Cookie
+CWE-540,Inclusion of Sensitive Information in Source Code,Source Code Leak
+CWE-548,Exposure of Information Through Directory Listing,Directory Listing
+CWE-552,Files or Directories Accessible to External Parties,File Exposure
+CWE-565,Reliance on Cookies without Validation and Integrity Checking,Cookie Trust
+CWE-601,URL Redirection to Untrusted Site,Open Redirect
+CWE-602,Client-Side Enforcement of Server-Side Security,Client-Side Security
+CWE-610,Externally Controlled Reference to a Resource in Another Sphere,External Reference
+CWE-611,Improper Restriction of XML External Entity Reference,XXE
+CWE-613,Insufficient Session Expiration,Session Expiration
+CWE-614,Sensitive Cookie in HTTPS Session Without 'Secure' Attribute,Insecure Cookie
+CWE-617,Reachable Assertion,Reachable Assertion
+CWE-618,Exposed Unsafe ActiveX Method,Unsafe ActiveX
+CWE-619,Dangling Database Cursor,Dangling Cursor
+CWE-620,Unverified Password Change,Password Change
+CWE-639,Authorization Bypass Through User-Controlled Key,IDOR
+CWE-640,Weak Password Recovery Mechanism for Forgotten Password,Password Recovery
+CWE-641,Improper Restriction of Names for Files and Other Resources,Resource Naming
+CWE-643,Improper Neutralization of Data within XPath Expressions,XPath Injection
+CWE-644,Improper Neutralization of HTTP Headers for Scripting Syntax,Header Injection
+CWE-662,Improper Synchronization,Synchronization
+CWE-665,Improper Initialization,Initialization
+CWE-667,Improper Locking,Improper Locking
+CWE-668,Exposure of Resource to Wrong Sphere,Resource Exposure
+CWE-669,Incorrect Resource Transfer Between Spheres,Resource Transfer
+CWE-670,Always-Incorrect Control Flow Implementation,Control Flow
+CWE-672,Operation on a Resource after Expiration or Release,Expired Resource
+CWE-674,Uncontrolled Recursion,Uncontrolled Recursion
+CWE-676,Use of Potentially Dangerous Function,Dangerous Function
+CWE-680,Integer Overflow to Buffer Overflow,Integer to Overflow
+CWE-681,Incorrect Conversion between Numeric Types,Numeric Conversion
+CWE-682,Incorrect Calculation,Incorrect Calculation
+CWE-693,Protection Mechanism Failure,Protection Bypass
+CWE-697,Incorrect Comparison,Incorrect Comparison
+CWE-703,Improper Check or Handling of Exceptional Conditions,Exception Handling
+CWE-704,Incorrect Type Conversion or Cast,Type Confusion
+CWE-706,Use of Incorrectly-Resolved Name or Reference,Name Resolution
+CWE-732,Incorrect Permission Assignment for Critical Resource,Permission Assignment
+CWE-754,Improper Check for Unusual or Exceptional Conditions,Condition Check
+CWE-755,Improper Handling of Exceptional Conditions,Exception Handling
+CWE-757,Selection of Less-Secure Algorithm During Negotiation,Algorithm Downgrade
+CWE-759,Use of a One-Way Hash without a Salt,Unsalted Hash
+CWE-770,Allocation of Resources Without Limits or Throttling,Resource Exhaustion
+CWE-771,Missing Reference to Active Allocated Resource,Resource Reference
+CWE-772,Missing Release of Resource after Effective Lifetime,Resource Leak
+CWE-776,Improper Restriction of Recursive Entity References in DTDs,XML Bomb
+CWE-778,Insufficient Logging,Insufficient Logging
+CWE-779,Logging of Excessive Data,Excessive Logging
+CWE-780,Use of RSA Algorithm without OAEP,Weak RSA Usage
+CWE-787,Out-of-bounds Write,Out-of-Bounds Write
+CWE-788,Access of Memory Location After End of Buffer,Buffer Overrun
+CWE-789,Memory Allocation with Excessive Size Value,Excessive Allocation
+CWE-798,Use of Hard-coded Credentials,Hardcoded Credentials
+CWE-799,Improper Control of Interaction Frequency,Rate Limiting
+CWE-804,Guessable CAPTCHA,Weak CAPTCHA
+CWE-805,Buffer Access with Incorrect Length Value,Buffer Length
+CWE-822,Untrusted Pointer Dereference,Pointer Dereference
+CWE-824,Access of Uninitialized Pointer,Uninitialized Pointer
+CWE-825,Expired Pointer Dereference,Expired Pointer
+CWE-829,Inclusion of Functionality from Untrusted Control Sphere,Untrusted Inclusion
+CWE-833,Deadlock,Deadlock
+CWE-834,Excessive Iteration,Excessive Iteration
+CWE-835,Loop with Unreachable Exit Condition,Infinite Loop
+CWE-836,Use of Password Hash Instead of Password for Authentication,Hash Auth Bypass
+CWE-838,Inappropriate Encoding for Output,Output Encoding
+CWE-840,Business Logic Errors,Business Logic
+CWE-841,Improper Enforcement of Behavioral Workflow,Workflow Bypass
+CWE-843,Access of Resource Using Incompatible Type,Type Confusion
+CWE-862,Missing Authorization,Missing Authorization
+CWE-863,Incorrect Authorization,Incorrect Authorization
+CWE-908,Use of Uninitialized Resource,Uninitialized Resource
+CWE-909,Missing Initialization of Resource,Missing Initialization
+CWE-910,Use of Expired File Descriptor,Expired Descriptor
+CWE-911,Improper Update of Reference Count,Reference Count
+CWE-912,Hidden Functionality,Hidden Functionality
+CWE-913,Improper Control of Dynamically-Managed Code Resources,Dynamic Code
+CWE-915,Improperly Controlled Modification of Dynamically-Determined Object Attributes,Mass Assignment
+CWE-916,Use of Password Hash With Insufficient Computational Effort,Weak Password Hash
+CWE-917,Improper Neutralization of Special Elements used in an Expression Language Statement,Expression Injection
+CWE-918,Server-Side Request Forgery (SSRF),SSRF
+CWE-920,Improper Restriction of Power Consumption,Power Consumption
+CWE-922,Insecure Storage of Sensitive Information,Insecure Storage
+CWE-924,Improper Enforcement of Message Integrity During Transmission in a Communication Channel,Message Integrity
+CWE-925,Improper Verification of Intent by Broadcast Receiver,Intent Verification
+CWE-926,Improper Export of Android Application Components,Android Export
+CWE-927,Use of Implicit Intent for Sensitive Communication,Implicit Intent
+CWE-940,Improper Verification of Source of a Communication Channel,Source Verification
+CWE-941,Incorrectly Specified Destination in a Communication Channel,Destination Error
+CWE-942,Permissive Cross-domain Policy with Untrusted Domains,CORS Misconfiguration
+CWE-943,Improper Neutralization of Special Elements in Data Query Logic,Query Injection
+CWE-1004,Sensitive Cookie Without 'HttpOnly' Flag,HttpOnly Cookie
+CWE-1021,Improper Restriction of Rendered UI Layers or Frames,Clickjacking
+CWE-1022,Use of Web Link to Untrusted Target with window.opener Access,Reverse Tabnabbing
+CWE-1035,OWASP Top Ten 2017 Category A6 - Security Misconfiguration,Security Misconfiguration
+CWE-1104,Use of Unmaintained Third Party Components,Unmaintained Component
+CWE-1174,ASP.NET Misconfiguration: Improper Model Validation,Model Validation
+CWE-1188,Initialization with Hard-Coded Network Resource Configuration Data,Hardcoded Config
+CWE-1236,Improper Neutralization of Formula Elements in a CSV File,CSV Injection
+CWE-1275,Sensitive Cookie with Improper SameSite Attribute,SameSite Cookie
+CWE-1321,Improperly Controlled Modification of Object Prototype Attributes,Prototype Pollution
+CWE-1333,Inefficient Regular Expression Complexity,ReDoS
+CWE-1336,Improper Neutralization of Special Elements Used in a Template Engine,Template Injection
+CWE-1385,Missing Origin Validation in WebSockets,WebSocket Origin
+CWE-1386,Insecure Operation on Windows Junction / Mount Point,Junction Attack
+CWE-1390,Weak Authentication,Weak Authentication
+CWE-1391,Use of Weak Credentials,Weak Credentials
+CWE-1392,Use of Default Credentials,Default Credentials
+CWE-1393,Use of Default Password,Default Password
+CWE-1394,Use of Default Cryptographic Key,Default Crypto Key
+CWE-1395,Dependency on Vulnerable Third-Party Component,Vulnerable Dependency

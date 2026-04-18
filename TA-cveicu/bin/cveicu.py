@@ -52,7 +52,7 @@ import os
 import json
 import time
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 # Add lib path for bundled packages
@@ -222,9 +222,10 @@ class CVEListV5Input(Script):
         """
         # Extract configuration
         index = input_config.get("index", "main")
+        self._current_index = index
         include_adp = self._str_to_bool(input_config.get("include_adp", "true"))
         include_rejected = self._str_to_bool(
-            input_config.get("include_rejected", "true")
+            input_config.get("include_rejected", "false")
         )
         batch_size = int(input_config.get("batch_size", "500"))
 
@@ -236,6 +237,7 @@ class CVEListV5Input(Script):
         # Initialize resource management
         self.resource_manager = ResourceManager(max_memory_mb=512, logger=self.logger)
         self.timeout_manager = TimeoutManager(timeout_seconds=3600, logger=self.logger)
+        self.timeout_manager.start()
 
         # Write audit event for start
         self._write_audit_event(ew, "Input started", input_name, index)
@@ -461,7 +463,7 @@ class CVEListV5Input(Script):
             ew: EventWriter for writing events
         """
         checkpoint = checkpoint_manager.get_checkpoint()
-        last_release = checkpoint.get("last_release")
+        last_release = checkpoint.get("last_release_tag")
 
         # Find delta releases since last checkpoint
         deltas = github_client.find_delta_releases_since(last_release)
@@ -570,12 +572,13 @@ class CVEListV5Input(Script):
             event = Event()
             event.stanza = context
             event.sourceType = "cveicu:error"
+            event.index = getattr(self, "_current_index", "main")
             event.data = json.dumps(
                 {
                     "level": "ERROR",
                     "message": message,
                     "context": context,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
             ew.write_event(event)
@@ -597,7 +600,7 @@ class CVEListV5Input(Script):
                     "level": "INFO",
                     "message": message,
                     "input_name": input_name,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
             ew.write_event(event)

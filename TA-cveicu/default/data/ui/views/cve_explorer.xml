@@ -7,13 +7,14 @@
         "ds_cve_search": {
             "type": "ds.search",
             "options": {
-                "query": "`cveicu_index` sourcetype=\"cveicu:record\" state=\"PUBLISHED\"\n| eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, \"NONE\")\n| search $vendor_filter$ $severity_filter$ $cwe_filter$\n| table cve_id title affected_vendor affected_product cvss_score severity cwe_id date_published\n| rename cve_id as \"CVE ID\", title as \"Title\", affected_vendor as \"Vendor\", affected_product as \"Product\", cvss_score as \"CVSS\", severity as \"Severity\", cwe_id as \"CWE\", date_published as \"Published\"\n| sort - Published"
+                "query": "`cveicu_index` sourcetype=\"cveicu:record\" state=\"PUBLISHED\"\n| eval severity=coalesce(cvss_v40_severity, cvss_v31_severity, \"NONE\")\n| search affected_vendor=\"$vendor_filter$\" $severity_filter$ cwe_id=\"$cwe_filter$\"\n| head 1000\n| table cve_id title affected_vendor affected_product cvss_score severity cwe_id date_published\n| rename cve_id as \"CVE ID\", title as \"Title\", affected_vendor as \"Vendor\", affected_product as \"Product\", cvss_score as \"CVSS\", severity as \"Severity\", cwe_id as \"CWE\", date_published as \"Published\"\n| sort - Published",
+                "queryParameters": {"earliest": "0", "latest": "now"}
             }
         },
         "ds_publish_sparkline": {
             "type": "ds.search",
             "options": {
-                "query": "`cveicu_index` sourcetype=\"cveicu:record\"\n| eval _time=strptime(date_published, \"%Y-%m-%dT%H:%M:%S\")\n| where _time > relative_time(now(), \"-30d@d\")\n| timechart span=1d count"
+                "query": "| inputlookup cve_daily_summary.csv\n| eval _time=strptime(date_published, \"%Y-%m-%d\")\n| where _time > relative_time(now(), \"-30d@d\")\n| stats sum(cve_count) as count by date_published\n| eval _time=strptime(date_published, \"%Y-%m-%d\")\n| timechart span=1d sum(count) as count"
             }
         }
     },
@@ -69,7 +70,7 @@
         "viz_cve_table": {
             "type": "splunk.table",
             "dataSources": {"primary": "ds_cve_search"},
-            "title": "CVE Records",
+            "title": "CVE Records (showing up to 1000 results)",
             "options": {"count": 20}
         }
     },
