@@ -11,8 +11,7 @@
         "ds_high_epss_7d": {
             "type": "ds.search",
             "options": {
-                "query": "| inputlookup risk_priority_lookup.csv\n| where tonumber(epss_score) > 0.5\n| lookup cve_daily_summary.csv cve_id\n| stats count as high_epss_count",
-                "queryParameters": {"earliest": "0", "latest": "now"}
+                "query": "| inputlookup risk_priority_lookup.csv\n| where tonumber(epss_score) > 0.5\n| stats count as high_epss_count"
             }
         },
         "ds_risk_table": {
