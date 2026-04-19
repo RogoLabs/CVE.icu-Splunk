@@ -6,7 +6,6 @@ services:
       SPLUNK_START_ARGS: "--accept-license"
       SPLUNK_GENERAL_TERMS: "--accept-sgt-current-at-splunk-com"
       SPLUNK_PASSWORD: "testpassword123"
-      SPLUNK_APPS_URL: "/tmp/TA-cveicu.tar.gz"
     ports:
       - "18089:8089"
       - "18000:8000"
@@ -18,6 +17,7 @@ services:
       - |
         cp -a /tmp/TA-cveicu-src /tmp/TA-cveicu
         cd /tmp && tar czf TA-cveicu.tar.gz TA-cveicu
+        export SPLUNK_APPS_URL=/tmp/TA-cveicu.tar.gz
         exec /sbin/entrypoint.sh start-service
     healthcheck:
       test:
