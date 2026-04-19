@@ -1,4 +1,4 @@
-"""Integration test fixtures — manages Docker Splunk lifecycle."""
+"""Integration test fixtures — connects to a running Splunk instance."""
 
 import os
 import time
@@ -7,20 +7,18 @@ import pytest
 import requests
 from urllib3.exceptions import InsecureRequestWarning
 
-# Suppress SSL warnings for self-signed Splunk cert
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 COMPOSE_FILE = os.path.join(
     os.path.dirname(__file__), "..", "..", "docker-compose.test.yml"
 )
-SPLUNK_URL = "https://localhost:18089"
-SPLUNK_USER = "admin"
-SPLUNK_PASSWORD = "testpassword123"
-STARTUP_TIMEOUT = 300  # 5 minutes max wait
+SPLUNK_URL = os.environ.get("SPLUNK_URL", "https://localhost:18089")
+SPLUNK_USER = os.environ.get("SPLUNK_USER", "admin")
+SPLUNK_PASSWORD = os.environ.get("SPLUNK_PASSWORD", "testpassword123")
+STARTUP_TIMEOUT = 300
 
 
 def _splunk_is_ready():
-    """Check if Splunk is ready to accept requests."""
     try:
         resp = requests.get(
             f"{SPLUNK_URL}/services/server/health",
@@ -34,7 +32,6 @@ def _splunk_is_ready():
 
 
 def _wait_for_splunk():
-    """Poll until Splunk is ready or timeout is reached."""
     start = time.time()
     while time.time() - start < STARTUP_TIMEOUT:
         if _splunk_is_ready():
@@ -45,29 +42,32 @@ def _wait_for_splunk():
 
 @pytest.fixture(scope="session")
 def splunk_service():
-    """Start Splunk container, wait for ready, yield connection info, tear down."""
-    # Start container
-    subprocess.run(
-        ["docker", "compose", "-f", COMPOSE_FILE, "up", "-d", "--wait"],
-        check=True,
-        capture_output=True,
-    )
+    """Connect to a running Splunk instance, or start one via docker-compose."""
+    managed = "SPLUNK_URL" not in os.environ
 
-    # Wait for Splunk REST API
-    if not _wait_for_splunk():
-        # Capture logs for debugging
-        logs = subprocess.run(
-            ["docker", "compose", "-f", COMPOSE_FILE, "logs"],
-            capture_output=True,
-            text=True,
-        )
+    if managed:
         subprocess.run(
-            ["docker", "compose", "-f", COMPOSE_FILE, "down", "-v"],
+            ["docker", "compose", "-f", COMPOSE_FILE, "up", "-d", "--wait"],
+            check=True,
             capture_output=True,
         )
-        pytest.fail(
-            f"Splunk did not start within {STARTUP_TIMEOUT}s.\nLogs:\n{logs.stdout}"
-        )
+
+    if not _wait_for_splunk():
+        if managed:
+            logs = subprocess.run(
+                ["docker", "compose", "-f", COMPOSE_FILE, "logs"],
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["docker", "compose", "-f", COMPOSE_FILE, "down", "-v"],
+                capture_output=True,
+            )
+            pytest.fail(
+                f"Splunk did not start within {STARTUP_TIMEOUT}s.\n{logs.stdout}"
+            )
+        else:
+            pytest.fail(f"Splunk not reachable at {SPLUNK_URL}")
 
     yield {
         "url": SPLUNK_URL,
@@ -75,11 +75,11 @@ def splunk_service():
         "password": SPLUNK_PASSWORD,
     }
 
-    # Tear down
-    subprocess.run(
-        ["docker", "compose", "-f", COMPOSE_FILE, "down", "-v"],
-        capture_output=True,
-    )
+    if managed:
+        subprocess.run(
+            ["docker", "compose", "-f", COMPOSE_FILE, "down", "-v"],
+            capture_output=True,
+        )
 
 
 @pytest.fixture

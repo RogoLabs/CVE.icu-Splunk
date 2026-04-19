@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [v1.x]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   unit-tests:
     name: Unit Tests (Python ${{ matrix.python-version }})
@@ -55,6 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [unit-tests, appinspect]
     strategy:
+      fail-fast: false
       matrix:
         splunk-version: ["9.3", "9.4"]
     steps:
@@ -64,62 +68,57 @@ jobs:
           python-version: "3.11"
       - name: Install test dependencies
         run: pip install pytest requests
-      - name: Start Splunk container
-        run: |
-          docker run -d --name splunk \
-            -p 8089:8089 -p 8000:8000 \
-            -e SPLUNK_START_ARGS=--accept-license \
-            -e SPLUNK_PASSWORD=TestPassword123! \
-            splunk/splunk:${{ matrix.splunk-version }}
-          echo "Waiting for Splunk to be healthy..."
-          for i in $(seq 1 60); do
-            STATUS=$(docker inspect --format='{{.State.Status}}' splunk 2>/dev/null || echo "missing")
-            if [ "$STATUS" = "exited" ]; then
-              echo "ERROR: Container exited unexpectedly"
-              docker logs splunk 2>&1 | tail -30
-              exit 1
-            fi
-            if curl -sf -k -u admin:TestPassword123! \
-              https://localhost:8089/services/server/info > /dev/null 2>&1; then
-              echo "Splunk is ready"
-              break
-            fi
-            echo "Waiting... ($i/60) [container: $STATUS]"
-            sleep 10
-          done
-      - name: Install add-on
+      - name: Build package
         run: |
           COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
             --exclude='.*' \
             --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
             --exclude='local' --exclude='metadata/local.meta' \
             TA-cveicu/
-          docker cp TA-cveicu.tar.gz splunk:/tmp/TA-cveicu.tar.gz
-          docker exec -u root splunk bash -c 'cd /opt/splunk/etc/apps && tar xzf /tmp/TA-cveicu.tar.gz && chown -R splunk:splunk TA-cveicu && chmod +x TA-cveicu/bin/*.py'
-          echo "=== Verifying install ==="
-          docker exec -u splunk splunk bash -c 'ls -la /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py'
-          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk cmd python3 /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py --scheme | head -3'
-          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk restart --accept-license --answer-yes --no-prompt'
-          echo "Waiting for Splunk restart..."
-          for i in $(seq 1 30); do
+      - name: Start Splunk container
+        run: |
+          docker run -d --name splunk \
+            -p 8089:8089 -p 8000:8000 \
+            -e SPLUNK_START_ARGS=--accept-license \
+            -e SPLUNK_GENERAL_TERMS=--accept-sgt-current-at-splunk-com \
+            -e SPLUNK_PASSWORD=TestPassword123! \
+            -e SPLUNK_APPS_URL=/tmp/TA-cveicu.tar.gz \
+            -v "$(pwd)/TA-cveicu.tar.gz:/tmp/TA-cveicu.tar.gz:ro" \
+            splunk/splunk:${{ matrix.splunk-version }}
+          echo "Waiting for Splunk to be healthy..."
+          for i in $(seq 1 60); do
             if curl -sf -k -u admin:TestPassword123! \
               https://localhost:8089/services/server/info > /dev/null 2>&1; then
-              echo "Splunk is ready"
+              echo "Splunk is ready after $((i * 10))s"
               break
             fi
-            echo "Waiting... ($i/30)"
+            if [ "$i" = "60" ]; then
+              echo "ERROR: Splunk did not start"
+              docker logs splunk 2>&1 | tail -30
+              exit 1
+            fi
             sleep 10
           done
-      - name: Verify add-on installation
+      - name: Restart Splunk to register modular inputs and icons
         run: |
-          echo "=== Checking modular input registration ==="
-          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk cmd python3 /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py --scheme' 2>&1 || true
-          echo "=== Checking splunkd logs for cveicu ==="
-          docker exec -u splunk splunk bash -c 'grep -i "cveicu\|Introspect" /opt/splunk/var/log/splunk/splunkd.log | tail -20' 2>&1 || true
-          echo "=== Listing installed apps ==="
-          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/apps/local?output_mode=json' | python3 -c "import sys,json; apps=json.load(sys.stdin)['entry']; print('\n'.join(a['name'] for a in apps))" 2>&1 || true
-          echo "=== Checking modular inputs ==="
-          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/data/modular-input?output_mode=json' | python3 -c "import sys,json; inputs=json.load(sys.stdin)['entry']; print('\n'.join(i['name'] for i in inputs))" 2>&1 || true
+          curl -sk -u admin:TestPassword123! \
+            -X POST https://localhost:8089/services/server/control/restart > /dev/null
+          echo "Restart issued, waiting..."
+          sleep 30
+          for i in $(seq 1 30); do
+            if curl -sf -k -u admin:TestPassword123! \
+              https://localhost:8089/services/apps/local/TA-cveicu?output_mode=json 2>/dev/null | \
+              python3 -c "import sys,json; d=json.load(sys.stdin); assert d['entry'][0]['content']['version']" 2>/dev/null; then
+              echo "Splunk restarted and app verified"
+              break
+            fi
+            if [ "$i" = "30" ]; then
+              echo "ERROR: Splunk did not restart properly"
+              docker logs splunk 2>&1 | tail -30
+              exit 1
+            fi
+            sleep 10
+          done
       - name: Run integration tests
         env:
           SPLUNK_URL: https://localhost:8089
@@ -129,12 +128,10 @@ jobs:
       - name: Dump logs on failure
         if: failure()
         run: |
-          echo "=== splunkd.log cveicu/modular/scheme references ==="
-          docker exec -u splunk splunk bash -c 'grep -i "cveicu\|modular.*input\|scheme\|Invalid key\|ExecProcessor" /opt/splunk/var/log/splunk/splunkd.log | tail -40' 2>&1 || true
-          echo "=== btool check ==="
-          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk btool check 2>&1 | grep -i cveicu' || true
-          echo "=== file listing ==="
-          docker exec -u splunk splunk bash -c 'ls -la /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py' 2>&1 || true
+          echo "=== splunkd.log ==="
+          docker exec splunk bash -c 'grep -i "cveicu\|modular.*input\|scheme\|ExecProcessor\|ERROR" /opt/splunk/var/log/splunk/splunkd.log | tail -50' 2>&1 || true
+          echo "=== installed apps ==="
+          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/apps/local?output_mode=json' | python3 -c "import sys,json; [print(a['name']) for a in json.load(sys.stdin).get('entry',[])]" 2>&1 || true
       - name: Cleanup
         if: always()
         run: docker rm -f splunk || true
