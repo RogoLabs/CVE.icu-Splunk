@@ -1,0 +1,140 @@
+name: CI (v1.x - Splunk 9)
+
+on:
+  push:
+    branches: [v1.x]
+  pull_request:
+    branches: [v1.x]
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: pip install pytest
+      - name: Run unit tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/TA-cveicu/bin:${{ github.workspace }}/TA-cveicu/bin/lib
+        run: pytest tests/unit/ -v
+
+  appinspect:
+    name: AppInspect
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.11"
+      - name: Install AppInspect
+        run: pip install splunk-appinspect
+      - name: Build package
+        run: |
+          COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
+            --exclude='.*' \
+            --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
+            --exclude='local' --exclude='metadata/local.meta' \
+            TA-cveicu/
+      - name: Run AppInspect
+        run: splunk-appinspect inspect TA-cveicu.tar.gz --mode precert
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: ta-cveicu-package
+          path: TA-cveicu.tar.gz
+
+  docker-integration:
+    name: Docker Integration (Splunk ${{ matrix.splunk-version }})
+    runs-on: ubuntu-latest
+    needs: [unit-tests, appinspect]
+    strategy:
+      matrix:
+        splunk-version: ["9.3", "9.4"]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.11"
+      - name: Install test dependencies
+        run: pip install pytest requests
+      - name: Start Splunk container
+        run: |
+          docker run -d --name splunk \
+            -p 8089:8089 -p 8000:8000 \
+            -e SPLUNK_START_ARGS=--accept-license \
+            -e SPLUNK_PASSWORD=TestPassword123! \
+            splunk/splunk:${{ matrix.splunk-version }}
+          echo "Waiting for Splunk to be healthy..."
+          for i in $(seq 1 60); do
+            STATUS=$(docker inspect --format='{{.State.Status}}' splunk 2>/dev/null || echo "missing")
+            if [ "$STATUS" = "exited" ]; then
+              echo "ERROR: Container exited unexpectedly"
+              docker logs splunk 2>&1 | tail -30
+              exit 1
+            fi
+            if curl -sf -k -u admin:TestPassword123! \
+              https://localhost:8089/services/server/info > /dev/null 2>&1; then
+              echo "Splunk is ready"
+              break
+            fi
+            echo "Waiting... ($i/60) [container: $STATUS]"
+            sleep 10
+          done
+      - name: Install add-on
+        run: |
+          COPYFILE_DISABLE=1 tar -czf TA-cveicu.tar.gz \
+            --exclude='.*' \
+            --exclude='__pycache__' --exclude='*.pyc' --exclude='*.pyo' \
+            --exclude='local' --exclude='metadata/local.meta' \
+            TA-cveicu/
+          docker cp TA-cveicu.tar.gz splunk:/tmp/TA-cveicu.tar.gz
+          docker exec -u root splunk bash -c 'cd /opt/splunk/etc/apps && tar xzf /tmp/TA-cveicu.tar.gz && chown -R splunk:splunk TA-cveicu && chmod +x TA-cveicu/bin/*.py'
+          echo "=== Verifying install ==="
+          docker exec -u splunk splunk bash -c 'ls -la /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py'
+          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk cmd python3 /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py --scheme | head -3'
+          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk restart --accept-license --answer-yes --no-prompt'
+          echo "Waiting for Splunk restart..."
+          for i in $(seq 1 30); do
+            if curl -sf -k -u admin:TestPassword123! \
+              https://localhost:8089/services/server/info > /dev/null 2>&1; then
+              echo "Splunk is ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 10
+          done
+      - name: Verify add-on installation
+        run: |
+          echo "=== Checking modular input registration ==="
+          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk cmd python3 /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py --scheme' 2>&1 || true
+          echo "=== Checking splunkd logs for cveicu ==="
+          docker exec -u splunk splunk bash -c 'grep -i "cveicu\|Introspect" /opt/splunk/var/log/splunk/splunkd.log | tail -20' 2>&1 || true
+          echo "=== Listing installed apps ==="
+          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/apps/local?output_mode=json' | python3 -c "import sys,json; apps=json.load(sys.stdin)['entry']; print('\n'.join(a['name'] for a in apps))" 2>&1 || true
+          echo "=== Checking modular inputs ==="
+          curl -sk -u admin:TestPassword123! 'https://localhost:8089/services/data/modular-input?output_mode=json' | python3 -c "import sys,json; inputs=json.load(sys.stdin)['entry']; print('\n'.join(i['name'] for i in inputs))" 2>&1 || true
+      - name: Run integration tests
+        env:
+          SPLUNK_URL: https://localhost:8089
+          SPLUNK_USER: admin
+          SPLUNK_PASSWORD: TestPassword123!
+        run: pytest tests/integration/ -v -m "not live"
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo "=== splunkd.log cveicu/modular/scheme references ==="
+          docker exec -u splunk splunk bash -c 'grep -i "cveicu\|modular.*input\|scheme\|Invalid key\|ExecProcessor" /opt/splunk/var/log/splunk/splunkd.log | tail -40' 2>&1 || true
+          echo "=== btool check ==="
+          docker exec -u splunk splunk bash -c '/opt/splunk/bin/splunk btool check 2>&1 | grep -i cveicu' || true
+          echo "=== file listing ==="
+          docker exec -u splunk splunk bash -c 'ls -la /opt/splunk/etc/apps/TA-cveicu/bin/cveicu.py' 2>&1 || true
+      - name: Cleanup
+        if: always()
+        run: docker rm -f splunk || true

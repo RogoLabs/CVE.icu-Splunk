@@ -1,16 +1,24 @@
 services:
   splunk:
-    image: splunk/splunk:latest
+    image: splunk/splunk:9.4
     platform: linux/amd64
     environment:
       SPLUNK_START_ARGS: "--accept-license"
       SPLUNK_GENERAL_TERMS: "--accept-sgt-current-at-splunk-com"
       SPLUNK_PASSWORD: "testpassword123"
+      SPLUNK_APPS_URL: "/tmp/TA-cveicu.tar.gz"
     ports:
       - "18089:8089"
       - "18000:8000"
     volumes:
-      - ./TA-cveicu:/opt/splunk/etc/apps/TA-cveicu
+      - ./TA-cveicu:/tmp/TA-cveicu-src:ro
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        cp -a /tmp/TA-cveicu-src /tmp/TA-cveicu
+        cd /tmp && tar czf TA-cveicu.tar.gz TA-cveicu
+        exec /sbin/entrypoint.sh start-service
     healthcheck:
       test:
         [

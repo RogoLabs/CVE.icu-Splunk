@@ -1,96 +1,93 @@
-<dashboard version="2">
+<form version="1.1">
     <label>Risk Priority</label>
     <description>CVEs ranked by EPSS, KEV, and CVSS enrichment</description>
-    <definition><![CDATA[
-{
-    "dataSources": {
-        "ds_kev_count": {
-            "type": "ds.search",
-            "options": {"query": "| inputlookup kev_lookup.csv | stats count as kev_count"}
-        },
-        "ds_high_epss_7d": {
-            "type": "ds.search",
-            "options": {
-                "query": "| inputlookup risk_priority_lookup.csv\n| where tonumber(epss_score) > 0.5\n| stats count as high_epss_count"
-            }
-        },
-        "ds_risk_table": {
-            "type": "ds.search",
-            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| sort - epss_score\n| where ($epss_filter$) AND ($kev_filter$)\n| head 100\n| table cve_id cvss_score cvss_severity epss_score in_kev ssvc_exploitation\n| rename cve_id as \"CVE ID\", cvss_score as \"CVSS Score\", cvss_severity as \"Severity\", epss_score as \"EPSS Score\", in_kev as \"In KEV\", ssvc_exploitation as \"SSVC Exploitation\""}
-        },
-        "ds_epss_dist": {
-            "type": "ds.search",
-            "options": {"query": "| inputlookup risk_priority_lookup.csv\n| eval bucket=case(tonumber(epss_score)>=0.9, \"0.9 - 1.0 (Critical)\", tonumber(epss_score)>=0.5, \"0.5 - 0.9 (High)\", tonumber(epss_score)>=0.1, \"0.1 - 0.5 (Medium)\", tonumber(epss_score)>0, \"0.0 - 0.1 (Low)\", 1=1, \"No EPSS\")\n| stats count by bucket\n| eval sort_order=case(bucket=\"0.0 - 0.1 (Low)\", 1, bucket=\"0.1 - 0.5 (Medium)\", 2, bucket=\"0.5 - 0.9 (High)\", 3, bucket=\"0.9 - 1.0 (Critical)\", 4, 1=1, 5)\n| sort sort_order\n| fields - sort_order"}
-        }
-    },
-    "inputs": {
-        "input_epss_threshold": {
-            "type": "input.dropdown",
-            "options": {
-                "token": "epss_filter",
-                "defaultValue": "1=1",
-                "items": [
-                    {"label": "All", "value": "1=1"},
-                    {"label": "EPSS > 0", "value": "tonumber(epss_score) > 0"},
-                    {"label": "EPSS > 0.1", "value": "tonumber(epss_score) > 0.1"},
-                    {"label": "EPSS > 0.5", "value": "tonumber(epss_score) > 0.5"},
-                    {"label": "EPSS > 0.9", "value": "tonumber(epss_score) > 0.9"}
-                ]
-            },
-            "title": "EPSS Threshold"
-        },
-        "input_kev_only": {
-            "type": "input.dropdown",
-            "options": {
-                "token": "kev_filter",
-                "defaultValue": "1=1",
-                "items": [
-                    {"label": "All", "value": "1=1"},
-                    {"label": "KEV Only", "value": "in_kev=\"true\""}
-                ]
-            },
-            "title": "KEV Filter"
-        }
-    },
-    "layout": {
-        "type": "grid",
-        "options": {"width": 1440},
-        "structure": [
-            {"item": "viz_kev_count", "type": "block", "position": {"x": 0, "y": 0, "w": 720, "h": 120}},
-            {"item": "viz_high_epss", "type": "block", "position": {"x": 720, "y": 0, "w": 720, "h": 120}},
-            {"item": "viz_epss_dist", "type": "block", "position": {"x": 0, "y": 120, "w": 1440, "h": 250}},
-            {"item": "viz_risk_table", "type": "block", "position": {"x": 0, "y": 370, "w": 1440, "h": 500}}
-        ],
-        "globalInputs": ["input_epss_threshold", "input_kev_only"]
-    },
-    "visualizations": {
-        "viz_kev_count": {
-            "type": "splunk.singlevalue",
-            "dataSources": {"primary": "ds_kev_count"},
-            "title": "CVEs in CISA KEV",
-            "options": {"majorColor": "#dc4e41"}
-        },
-        "viz_high_epss": {
-            "type": "splunk.singlevalue",
-            "dataSources": {"primary": "ds_high_epss_7d"},
-            "title": "High-EPSS CVEs (EPSS > 0.5)",
-            "options": {"majorColor": "#f8be34"}
-        },
-        "viz_epss_dist": {
-            "type": "splunk.bar",
-            "dataSources": {"primary": "ds_epss_dist"},
-            "title": "EPSS Score Distribution",
-            "options": {"xAxisTitleText": "EPSS Bucket", "yAxisTitleText": "CVE Count"}
-        },
-        "viz_risk_table": {
-            "type": "splunk.table",
-            "dataSources": {"primary": "ds_risk_table"},
-            "title": "CVEs by Risk Priority",
-            "options": {"count": 20}
-        }
-    },
-    "title": "Risk Priority",
-    "description": "CVEs ranked by EPSS, KEV, and CVSS enrichment"
-}
-    ]]></definition>
-</dashboard>
+    <fieldset submitButton="false" autoRun="true">
+        <input type="dropdown" token="epss_filter">
+            <label>EPSS Threshold</label>
+            <default>1=1</default>
+            <choice value="1=1">All</choice>
+            <choice value="tonumber(epss_score) &gt; 0">EPSS &gt; 0</choice>
+            <choice value="tonumber(epss_score) &gt; 0.1">EPSS &gt; 0.1</choice>
+            <choice value="tonumber(epss_score) &gt; 0.5">EPSS &gt; 0.5</choice>
+            <choice value="tonumber(epss_score) &gt; 0.9">EPSS &gt; 0.9</choice>
+        </input>
+        <input type="dropdown" token="kev_filter">
+            <label>KEV Filter</label>
+            <default>1=1</default>
+            <choice value="1=1">All</choice>
+            <choice value="in_kev=&quot;true&quot;">KEV Only</choice>
+        </input>
+    </fieldset>
+    <row>
+        <panel>
+            <title>CVEs in CISA KEV</title>
+            <single>
+                <search>
+                    <query>| inputlookup kev_lookup.csv | stats count as kev_count</query>
+                </search>
+                <option name="drilldown">none</option>
+                <option name="colorBy">value</option>
+                <option name="useColors">1</option>
+                <option name="rangeColors">["0xdc4e41","0xdc4e41"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="refresh.display">progressbar</option>
+            </single>
+        </panel>
+        <panel>
+            <title>High-EPSS CVEs (EPSS &gt; 0.5)</title>
+            <single>
+                <search>
+                    <query>| inputlookup epss_lookup.csv
+| where tonumber(epss_score) &gt; 0.5
+| stats count as high_epss_count</query>
+                </search>
+                <option name="drilldown">none</option>
+                <option name="colorBy">value</option>
+                <option name="useColors">1</option>
+                <option name="rangeColors">["0xf8be34","0xf8be34"]</option>
+                <option name="rangeValues">[0]</option>
+                <option name="refresh.display">progressbar</option>
+            </single>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <title>EPSS Score Distribution</title>
+            <chart>
+                <search>
+                    <query>| inputlookup epss_lookup.csv
+| eval bucket=case(tonumber(epss_score)&gt;=0.9, "0.9 - 1.0 (Critical)", tonumber(epss_score)&gt;=0.5, "0.5 - 0.9 (High)", tonumber(epss_score)&gt;=0.1, "0.1 - 0.5 (Medium)", tonumber(epss_score)&gt;0, "0.0 - 0.1 (Low)", 1=1, "No EPSS")
+| stats count by bucket
+| eval sort_order=case(bucket="0.0 - 0.1 (Low)", 1, bucket="0.1 - 0.5 (Medium)", 2, bucket="0.5 - 0.9 (High)", 3, bucket="0.9 - 1.0 (Critical)", 4, 1=1, 5)
+| sort sort_order
+| fields - sort_order</query>
+                </search>
+                <option name="charting.chart">bar</option>
+                <option name="charting.axisTitleX.text">EPSS Bucket</option>
+                <option name="charting.axisTitleY.text">CVE Count</option>
+                <option name="charting.legend.placement">none</option>
+                <option name="refresh.display">progressbar</option>
+            </chart>
+        </panel>
+    </row>
+    <row>
+        <panel>
+            <title>CVEs by Risk Priority</title>
+            <table>
+                <search>
+                    <query>| inputlookup epss_lookup.csv
+| lookup kev_lookup.csv cve_id OUTPUT in_kev kev_vendor kev_product
+| eval in_kev=if(isnotnull(in_kev), in_kev, "false")
+| sort - epss_score
+| where ($epss_filter$) AND ($kev_filter$)
+| head 100
+| table cve_id epss_score in_kev kev_vendor kev_product
+| rename cve_id as "CVE ID", epss_score as "EPSS Score", in_kev as "In KEV", kev_vendor as "KEV Vendor", kev_product as "KEV Product"</query>
+                </search>
+                <option name="count">20</option>
+                <option name="drilldown">none</option>
+                <option name="refresh.display">progressbar</option>
+            </table>
+        </panel>
+    </row>
+</form>
