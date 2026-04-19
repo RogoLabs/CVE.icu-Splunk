@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [v1.x]
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   unit-tests:
     name: Unit Tests (Python ${{ matrix.python-version }})
@@ -17,8 +14,8 @@ jobs:
       matrix:
         python-version: ["3.9", "3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5.6.0
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install test dependencies
@@ -32,8 +29,8 @@ jobs:
     name: AppInspect
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5.6.0
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Install AppInspect
@@ -48,7 +45,7 @@ jobs:
       - name: Run AppInspect
         run: splunk-appinspect inspect TA-cveicu.tar.gz --mode precert
       - name: Upload package artifact
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v7
         with:
           name: ta-cveicu-package
           path: TA-cveicu.tar.gz
@@ -62,8 +59,8 @@ jobs:
       matrix:
         splunk-version: ["9.3", "9.4"]
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v5.6.0
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
       - name: Install test dependencies
