@@ -17,6 +17,7 @@ TA-cveicu/bin/lib/
 
 # Internal planning docs
 docs/superpowers/
+docs/splunkbase_feedback_response.txt
 
 # Node.js (Playwright screenshot script)
 scripts/node_modules/

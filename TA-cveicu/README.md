@@ -278,7 +278,7 @@ Technical diagnostics: last successful run, error count (24h), total events inge
 
 ## Splunk 9 End of Support
 
-**v2.0.0 requires Splunk Enterprise 10.0+ or Splunk Cloud.** Users on Splunk 9 should remain on v1.0.6.
+**v2.0.x requires Splunk Enterprise 10.0+ or Splunk Cloud.** Users on Splunk 9 should use [v1.1.2](https://splunkbase.splunk.com/app/8395).
 
 ### Why Splunk 10+?
 

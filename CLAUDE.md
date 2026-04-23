@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**TA-cveicu** is a Splunk Technology Add-on that ingests the CVE List V5 database (~300K+ CVEs) from the official CVEProject/cvelistV5 GitHub repository. It provides CVSS scoring, CWE classification, EPSS/KEV enrichment, risk priority scoring, and four Dashboard Studio dashboards. Current version: 2.0.0. Requires Splunk 10+.
+**TA-cveicu** is a Splunk Technology Add-on that ingests the CVE List V5 database (~300K+ CVEs) from the official CVEProject/cvelistV5 GitHub repository. It provides CVSS scoring, CWE classification, EPSS/KEV enrichment, risk priority scoring, and four Dashboard Studio dashboards. Current version: 2.0.5 (main), 1.1.2 (v1.x branch). Requires Splunk 10+ (v2.x) or Splunk 9.3+ (v1.x).
 
 ## Repository Structure
 
@@ -31,20 +31,20 @@ All add-on code lives under `TA-cveicu/`. Key areas:
 Package for Splunk deployment:
 
 ```bash
-COPYFILE_DISABLE=1 tar -czf TA-cveicu-2.0.0.tar.gz --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
+COPYFILE_DISABLE=1 tar -czf TA-cveicu-2.0.5.tar.gz --exclude='__pycache__' --exclude='*.pyc' --exclude='local' --exclude='metadata/local.meta' TA-cveicu/
 ```
 
 The `COPYFILE_DISABLE=1` prevents macOS resource fork (`._`) files from being included, which cause AppInspect failures. The `.spl` format is just a renamed `.tar.gz`. Splunkbase submission requires passing AppInspect validation:
 
 ```bash
-splunk-appinspect inspect TA-cveicu-2.0.0.tar.gz --mode precert
+splunk-appinspect inspect TA-cveicu-2.0.5.tar.gz --mode precert
 ```
 
 ## CI/CD
 
 GitHub Actions workflow at `.github/workflows/ci.yml`:
 
-- **Unit tests**: Python 3.11 and 3.12 (3.9 dropped — EOL, not in any Splunk 10 release)
+- **Unit tests**: Python 3.11, 3.12, and 3.13 (3.9 dropped — EOL, not in any Splunk 10 release)
 - **AppInspect**: Builds package and runs `splunk-appinspect inspect --mode precert`
 - **Docker integration**: 28 tests against a live Splunk container (modular input registration, search command registration, REST API endpoints, dashboard loading, saved search dispatch)
 
@@ -65,7 +65,7 @@ GitHub Actions workflow at `.github/workflows/ci.yml`:
 ## Key Conventions
 
 - **Vendored dependencies**: All Python libraries are bundled in `bin/lib/` for AppInspect compliance. No pip install needed.
-- **Python 3 only**: Explicitly set in inputs.conf (`python.version = python3`). Tested on 3.11 and 3.12.
+- **Python 3 only**: Set in inputs.conf (`python.version = python3`, `python.required = 3.13`). Tested on 3.11, 3.12, and 3.13.
 - **Splunk 10+ required**: Dashboard Studio v2 format is not compatible with Splunk 9.
 - **Splunk Cloud safe**: Uses Entity API for config, monitors memory to stay under Watchdog limits, cooperative timeout checking (no signals).
 - **KV Store primary, file fallback**: Checkpoint manager tries KV Store first, falls back to file-based checkpoints.
