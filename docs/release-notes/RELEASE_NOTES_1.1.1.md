@@ -4,7 +4,7 @@
 
 ## Overview
 
-v1.1.1 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splunk's updated Cloud vetting process now requires `python.required = python3` in addition to the existing `python.version = python3` for all Python modular inputs and custom search commands.
+v1.1.1 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splunk's updated Cloud vetting process now requires `python.required = 3.13` in addition to the existing `python.version = python3` for all Python modular inputs and custom search commands.
 
 ## Requirements
 
@@ -16,8 +16,8 @@ v1.1.1 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splu
 
 ### Splunk Cloud Compliance
 
-- Added `python.required = python3` to the `[cveicu]` modular input stanza in `inputs.conf`
-- Added `python.required = python3` to the `[cveicuepsskev]` custom search command stanza in `commands.conf`
+- Added `python.required = 3.13` to the `[cveicu]` modular input stanza in `inputs.conf`
+- Added `python.required = 3.13` to the `[cveicuepsskev]` custom search command stanza in `commands.conf`
 - Resolves AppInspect checks `check_modular_inputs_python_required` and `check_commands_conf_python_required`
 
 No functional changes. Data pipeline, enrichment, dashboards, and all other behavior are identical to v1.1.0.
