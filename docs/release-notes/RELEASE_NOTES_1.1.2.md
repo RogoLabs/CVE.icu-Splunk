@@ -1,10 +1,10 @@
-# TA-cveicu v1.1.1 Release Notes
+# TA-cveicu v1.1.2 Release Notes
 
 **Release Date:** April 23, 2026
 
 ## Overview
 
-v1.1.1 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splunk's updated Cloud vetting process now requires `python.required = 3.13` in addition to the existing `python.version = python3` for all Python modular inputs and custom search commands.
+v1.1.2 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splunk's updated Cloud vetting process now requires `python.required = 3.13` in addition to the existing `python.version = python3` for all Python modular inputs and custom search commands.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ No functional changes. Data pipeline, enrichment, dashboards, and all other beha
 
 ## Install
 
-1. Download the v1.1.1 release from Splunkbase or the [v1.x branch](https://github.com/RogoLabs/CVE.icu-Splunk/tree/v1.x)
+1. Download the v1.1.2 release from Splunkbase or the [v1.x branch](https://github.com/RogoLabs/CVE.icu-Splunk/tree/v1.x)
 2. Go to **Apps > Manage Apps > Install app from file**
 3. Upload the package and check **Upgrade app** if upgrading from v1.1.0
 4. Restart Splunk if prompted

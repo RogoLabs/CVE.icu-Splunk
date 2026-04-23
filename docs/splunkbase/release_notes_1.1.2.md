@@ -1,10 +1,10 @@
-## v1.1.1 — Fix: Splunk Cloud Compatibility
+## v1.1.2 — Fix: Splunk Cloud Compatibility
 
 **Fix:** Added `python.required = 3.13` to the modular input and custom search command configurations. Splunk's updated Cloud vetting process now requires this setting in addition to `python.version = python3`. Without it, the app loses Splunk Cloud Platform compatibility. No functional changes — data pipeline, enrichment, and dashboards are identical to v1.1.0.
 
 ---
 
-## What's New in v1.1 (included in v1.1.1)
+## What's New in v1.1 (included in v1.1.2)
 
 **Compatible with Splunk 9.3+ and Splunk Cloud (9.x).** Backport of all v2.0 features using SimpleXML dashboards.
 

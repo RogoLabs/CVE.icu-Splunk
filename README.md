@@ -15,7 +15,7 @@ Splunk Technology Add-on for ingesting the complete CVE V5 database (327,000+ vu
 | Version    | Splunk                       | Python                                | Dashboard Format    |
 | ---------- | ---------------------------- | ------------------------------------- | ------------------- |
 | **v2.0.x** | Splunk 10.0+ or Splunk Cloud | Python 3.11+ (bundled with Splunk 10) | Dashboard Studio v2 |
-| **v1.1.1** | Splunk 9.3+                  | Python 3.9+ (bundled with Splunk 9)   | SimpleXML           |
+| **v1.1.2** | Splunk 9.3+                  | Python 3.9+ (bundled with Splunk 9)   | SimpleXML           |
 
 > **Splunk 9 users**: Use the [v1.x branch](https://github.com/RogoLabs/CVE.icu-Splunk/tree/v1.x) — same features, same data, SimpleXML dashboards compatible with Splunk 9.3+.
 
