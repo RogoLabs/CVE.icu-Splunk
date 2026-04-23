@@ -1,10 +1,10 @@
-# TA-cveicu v2.0.4 Release Notes
+# TA-cveicu v2.0.5 Release Notes
 
 **Release Date:** April 23, 2026
 
 ## Overview
 
-v2.0.4 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splunk's updated Cloud vetting process now requires `python.required = 3.13` in addition to the existing `python.version = python3` for all Python modular inputs and custom search commands.
+v2.0.5 is a compliance fix to maintain Splunk Cloud Platform compatibility. Splunk's updated Cloud vetting process now requires `python.required = 3.13` in addition to the existing `python.version = python3` for all Python modular inputs and custom search commands.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ No functional changes. Data pipeline, enrichment, dashboards, and all other beha
 
 ## Install
 
-1. Download v2.0.4 from Splunkbase
+1. Download v2.0.5 from Splunkbase
 2. Go to **Apps > Manage Apps > Install app from file**
 3. Upload the package and check **Upgrade app** if upgrading from v2.0.3
 4. Restart Splunk if prompted

@@ -32,7 +32,7 @@ This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from t
 - Python 3.11+ (bundled with Splunk 10)
 - Network access to GitHub API (api.github.com)
 
-> **Splunk 9 users:** v2.0.x requires Splunk 10+. If you're on Splunk 9, use [v1.1.1](https://splunkbase.splunk.com/app/8395). See [Splunk 9 End of Support](#splunk-9-end-of-support) below.
+> **Splunk 9 users:** v2.0.x requires Splunk 10+. If you're on Splunk 9, use [v1.1.2](https://splunkbase.splunk.com/app/8395). See [Splunk 9 End of Support](#splunk-9-end-of-support) below.
 
 ## Installation
 

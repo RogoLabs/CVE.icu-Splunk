@@ -15,7 +15,7 @@ Splunk Technology Add-on for ingesting the complete CVE V5 database (327,000+ vu
 - Splunk Enterprise 10.0+ or Splunk Cloud
 - Python 3.11+ (bundled with Splunk 10)
 
-> Splunk 9 users: Use [v1.1.1](https://github.com/RogoLabs/CVE.icu-Splunk/releases/tag/v1.1.1).
+> Splunk 9 users: Use [v1.1.2](https://github.com/RogoLabs/CVE.icu-Splunk/releases/tag/v1.1.2).
 
 ## Documentation
 

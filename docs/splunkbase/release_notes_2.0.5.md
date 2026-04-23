@@ -1,12 +1,12 @@
-## v2.0.4 — Fix: Splunk Cloud Compatibility
+## v2.0.5 — Fix: Splunk Cloud Compatibility
 
 **Fix:** Added `python.required = 3.13` to the modular input and custom search command configurations. Splunk's updated Cloud vetting process now requires this setting in addition to `python.version = python3`. Without it, the app loses Splunk Cloud Platform compatibility. No functional changes — data pipeline, enrichment, and dashboards are identical to v2.0.3.
 
 ---
 
-## What's New in v2.0 (included in v2.0.4)
+## What's New in v2.0 (included in v2.0.5)
 
-**Requires Splunk 10.0+ or Splunk Cloud.** Users on Splunk 9 should remain on v1.1.1.
+**Requires Splunk 10.0+ or Splunk Cloud.** Users on Splunk 9 should remain on v1.1.2.
 
 ### New Features
 
@@ -37,6 +37,6 @@
 ### Migration from v1.x
 
 1. Upgrade Splunk to 10.0+ first
-2. Install v2.0.4 via Manage Apps
+2. Install v2.0.5 via Manage Apps
 3. No data migration needed -- same sourcetypes and field extractions
 4. If using a custom index, create local/macros.conf with your cveicu_index definition
