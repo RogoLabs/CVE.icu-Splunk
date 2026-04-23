@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**TA-cveicu** is a Splunk Technology Add-on that ingests the CVE List V5 database (~300K+ CVEs) from the official CVEProject/cvelistV5 GitHub repository. It provides CVSS scoring, CWE classification, EPSS/KEV enrichment, risk priority scoring, and four Dashboard Studio dashboards. Current version: 2.0.0. Requires Splunk 10+.
+**TA-cveicu** is a Splunk Technology Add-on that ingests the CVE List V5 database (~300K+ CVEs) from the official CVEProject/cvelistV5 GitHub repository. It provides CVSS scoring, CWE classification, EPSS/KEV enrichment, risk priority scoring, and four Dashboard Studio dashboards. Current version: 1.1.2 (v1.x branch, Splunk 9.3+), 2.0.5 (main, Splunk 10+).
 
 ## Repository Structure
 
@@ -23,7 +23,7 @@ All add-on code lives under `TA-cveicu/`. Key areas:
   - `logging_config.py` — Centralized logging
 - `bin/lib/` — Vendored dependencies (splunklib, requests, urllib3, certifi, etc.)
 - `default/` — Splunk configuration (inputs.conf, props.conf, transforms.conf, savedsearches.conf, macros.conf, etc.)
-- `default/data/ui/views/` — Dashboard Studio v2 dashboards (JSON in CDATA blocks)
+- `default/data/ui/views/` — SimpleXML dashboards
 - `lookups/` — CSV lookup tables (cvss_severity, cwe, epss, kev, risk_priority, cve_total, cve_daily_summary, cve_vendors)
 
 ## Build & Packaging
@@ -31,20 +31,20 @@ All add-on code lives under `TA-cveicu/`. Key areas:
 Package for Splunk deployment:
 
 ```bash
-COPYFILE_DISABLE=1 tar -czf TA-cveicu-2.0.0.tar.gz --exclude='__pycache__' --exclude='*.pyc' TA-cveicu/
+COPYFILE_DISABLE=1 tar -czf TA-cveicu-1.1.2.tar.gz --exclude='__pycache__' --exclude='*.pyc' --exclude='local' --exclude='metadata/local.meta' TA-cveicu/
 ```
 
 The `COPYFILE_DISABLE=1` prevents macOS resource fork (`._`) files from being included, which cause AppInspect failures. The `.spl` format is just a renamed `.tar.gz`. Splunkbase submission requires passing AppInspect validation:
 
 ```bash
-splunk-appinspect inspect TA-cveicu-2.0.0.tar.gz --mode precert
+splunk-appinspect inspect TA-cveicu-1.1.2.tar.gz --mode precert
 ```
 
 ## CI/CD
 
 GitHub Actions workflow at `.github/workflows/ci.yml`:
 
-- **Unit tests**: Python 3.11 and 3.12 (3.9 dropped — EOL, not in any Splunk 10 release)
+- **Unit tests**: Python 3.9, 3.11, and 3.12
 - **AppInspect**: Builds package and runs `splunk-appinspect inspect --mode precert`
 - **Docker integration**: 28 tests against a live Splunk container (modular input registration, search command registration, REST API endpoints, dashboard loading, saved search dispatch)
 
@@ -58,15 +58,15 @@ GitHub Actions workflow at `.github/workflows/ci.yml`:
 
 **Dashboard performance**: Scheduled saved searches pre-compute KPIs into lookup CSVs (`savedsearches.conf`), so dashboards load from lookups rather than running expensive searches.
 
-**Dashboards**: Four Dashboard Studio v2 dashboards (`<dashboard version="2">` with JSON `<definition><![CDATA[...]]></definition>`). Requires Splunk 10+.
+**Dashboards**: Four SimpleXML dashboards (`<dashboard version="1.1">`). Compatible with Splunk 9.3+.
 
 **Primary sourcetype**: `cveicu:record` (JSON). Also `cveicu:error` and `cveicu:audit`.
 
 ## Key Conventions
 
 - **Vendored dependencies**: All Python libraries are bundled in `bin/lib/` for AppInspect compliance. No pip install needed.
-- **Python 3 only**: Explicitly set in inputs.conf (`python.version = python3`). Tested on 3.11 and 3.12.
-- **Splunk 10+ required**: Dashboard Studio v2 format is not compatible with Splunk 9.
+- **Python 3 only**: Set in inputs.conf (`python.version = python3`, `python.required = 3.13`). Tested on 3.9, 3.11, and 3.12.
+- **Splunk 9.3+ required**: SimpleXML dashboards compatible with Splunk 9.3+.
 - **Splunk Cloud safe**: Uses Entity API for config, monitors memory to stay under Watchdog limits, cooperative timeout checking (no signals).
 - **KV Store primary, file fallback**: Checkpoint manager tries KV Store first, falls back to file-based checkpoints.
 - **Credential storage**: GitHub tokens stored via Splunk's `storage/passwords` endpoint with `realm=TA-cveicu`, `username=github_api_token`.

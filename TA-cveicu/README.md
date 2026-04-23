@@ -28,11 +28,11 @@ This add-on ingests CVE (Common Vulnerabilities and Exposures) V5 records from t
 
 ## Requirements
 
-- **Splunk Enterprise 10.0+** or **Splunk Cloud**
-- Python 3.11+ (bundled with Splunk 10)
+- **Splunk Enterprise 9.3+** or **Splunk Cloud**
+- Python 3.9+ (bundled with Splunk 9)
 - Network access to GitHub API (api.github.com)
 
-> **Splunk 9 users:** v2.0.0 requires Splunk 10+. If you're on Splunk 9, use [v1.0.6](https://splunkbase.splunk.com/app/8395). See [Splunk 9 End of Support](#splunk-9-end-of-support) below.
+> **Splunk 10 users:** Use [v2.0.5](https://splunkbase.splunk.com/app/8395) for Dashboard Studio v2 dashboards.
 
 ## Installation
 
@@ -276,36 +276,9 @@ Executive-level overview with eight panels: total CVEs, new this week, critical+
 
 Technical diagnostics: last successful run, error count (24h), total events ingested, enrichment lookup sizes, recent audit events, daily volume by publication date, and recent errors/warnings from splunkd.
 
-## Splunk 9 End of Support
+## Upgrading to v2.x
 
-**v2.0.0 requires Splunk Enterprise 10.0+ or Splunk Cloud.** Users on Splunk 9 should remain on v1.0.6.
-
-### Why Splunk 10+?
-
-All four dashboards are built with **Dashboard Studio v2** (`<dashboard version="2">`), which uses a JSON definition format introduced in Splunk 10. SimpleXML dashboards from Splunk 9 and earlier are not compatible with Dashboard Studio, and vice versa. Rewriting the dashboards in the modern framework was necessary to support the enrichment panels, risk scoring visualizations, and filter interactions that v2.0.0 provides.
-
-### What Changed from v1.x
-
-| Area          | v1.x (Splunk 9)                 | v2.0.0 (Splunk 10+)                                         |
-| ------------- | ------------------------------- | ----------------------------------------------------------- |
-| Dashboards    | SimpleXML                       | Dashboard Studio v2 (JSON)                                  |
-| Setup         | Setup page UI                   | REST API credential storage                                 |
-| Default input | Disabled, requires manual setup | Enabled on install                                          |
-| Index config  | Hardcoded `index=main`          | Configurable via `cveicu_index` macro                       |
-| Python        | 3.7+ (tested 3.9)               | 3.11+ (tested 3.11, 3.12)                                   |
-| CI/CD         | None                            | GitHub Actions (unit tests, AppInspect, Docker integration) |
-
-### Migrating from v1.x
-
-1. **Upgrade Splunk first** — v2.0.0 will not render dashboards on Splunk 9
-2. **Install v2.0.0** — standard upgrade process via Manage Apps
-3. **No data migration required** — same sourcetypes (`cveicu:record`, `cveicu:error`, `cveicu:audit`) and field extractions
-4. **Custom local/ overrides carry forward** — if you customized `inputs.conf` or other configs in `local/`, they still work
-5. **Set your index** — if you use a non-default index, create `local/macros.conf` with your `cveicu_index` definition (see [Changing the Index](#changing-the-index))
-
-### Python 3.9 EOL
-
-Python 3.9 reached end-of-life in October 2025. Splunk 10.0 ships Python 3.11.8 — there is no supported Splunk 10 environment that runs Python 3.9. The CI test matrix for v2.0.0 tests against Python 3.11 and 3.12 only. All vendored dependencies in `bin/lib/` are compatible with Python 3.11+.
+If you upgrade to Splunk 10, use [v2.0.5](https://splunkbase.splunk.com/app/8395) for Dashboard Studio v2 dashboards. No data migration is needed — same sourcetypes and field extractions.
 
 ## Support
 
@@ -314,16 +287,17 @@ Python 3.9 reached end-of-life in October 2025. Splunk 10.0 ships Python 3.11.8 
 
 ## Version History
 
-| Version | Date       | Changes                                                                                                                |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| 2.0.0   | 2026-04-21 | Splunk 10+ required, Dashboard Studio v2, `cveicu_index` macro, CI pipeline, default input enabled, setup page removed |
-| 1.0.6   | 2026-04-14 | Fix modular input registration on systems with missing SSL libs                                                        |
-| 1.0.5   | 2026-04-14 | Fix field extractions and modular input registration                                                                   |
-| 1.0.4   | 2026-04-14 | Rename data input to "cve.icu" for discoverability                                                                     |
-| 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion                                                              |
-| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud                                                                            |
-| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement                                                                     |
-| 1.0.0   | 2026-01-22 | Initial release                                                                                                        |
+| Version | Date       | Changes                                                                                                      |
+| ------- | ---------- | ------------------------------------------------------------------------------------------------------------ |
+| 1.1.2   | 2026-04-23 | Add `python.required = 3.13` for Splunk Cloud compatibility                                                  |
+| 1.1.0   | 2026-04-19 | Splunk 9 backport of v2.0.x: SimpleXML dashboards, EPSS/KEV enrichment, risk priority, default input enabled |
+| 1.0.6   | 2026-04-14 | Fix modular input registration on systems with missing SSL libs                                              |
+| 1.0.5   | 2026-04-14 | Fix field extractions and modular input registration                                                         |
+| 1.0.4   | 2026-04-14 | Rename data input to "cve.icu" for discoverability                                                           |
+| 1.0.3   | 2026-04-06 | Fix temp ZIP file cleanup preventing /tmp disk exhaustion                                                    |
+| 1.0.2   | 2026-04-05 | Fix EPSS/KEV lookup refresh on Splunk Cloud                                                                  |
+| 1.0.1   | 2026-02-16 | Remove upper bound from Splunk version requirement                                                           |
+| 1.0.0   | 2026-01-22 | Initial release                                                                                              |
 
 ## License
 
